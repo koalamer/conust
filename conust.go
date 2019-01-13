@@ -33,6 +33,8 @@ const builderInitialCap = 7
 
 const trailing0 = "0"
 
+const negativeIntegerTerminator byte = '~'
+
 // B10FromI32 encodes int32 into sortable string using decimal digits
 func B10FromI32(i int32) (s string) {
 	if i == 0 {
@@ -72,11 +74,11 @@ func B36FromI64(i int64) (s string) {
 	if i > 0 {
 		b.WriteByte(signPositive)
 		number = strconv.FormatInt(i, 36)
-		intStringToB10(&b, true, number)
+		intStringToB36(&b, true, number)
 	} else {
 		b.WriteByte(signNegative)
 		number = strconv.FormatInt(i*-1, 36)
-		intStringToB10(&b, false, number)
+		intStringToB36(&b, false, number)
 	}
 	return b.String()
 }
@@ -98,6 +100,21 @@ func intStringToB10(b *strings.Builder, positive bool, number string) {
 		for j := 0; j < len(number); j++ {
 			b.WriteByte(flipDigit10(number[j]))
 		}
+		b.WriteByte(negativeIntegerTerminator)
+	}
+}
+
+func intStringToB36(b *strings.Builder, positive bool, number string) {
+	if positive {
+		b.WriteByte(intToDigit36(len(number)))
+		b.WriteString(strings.TrimRight(number, trailing0))
+	} else {
+		b.WriteByte(intToReversedDigit36(len(number)))
+		number = strings.TrimRight(number, trailing0)
+		for j := 0; j < len(number); j++ {
+			b.WriteByte(flipDigit36(number[j]))
+		}
+		b.WriteByte(negativeIntegerTerminator)
 	}
 }
 
@@ -130,6 +147,10 @@ func decFromIntString(positive bool, number string) string {
 
 func flipDigit10(digit byte) byte {
 	return intToReversedDigit10(digitToInt(digit))
+}
+
+func flipDigit36(digit byte) byte {
+	return intToReversedDigit36(digitToInt(digit))
 }
 
 func digitToInt(digit byte) int {
