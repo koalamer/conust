@@ -16,7 +16,7 @@ The first character of the output will be "9" for positive numbers, and "0" for 
 
 The length of the number is encoded in a Base(36) digit followed by the number itself, omitting the trailing zeros.
 
-In case of a negative numbers, all digits are swapped for their corresponding pair counting from the end of the digi alphabet. E.g. in Base(10) a "2" becomes "7" and vice vera, in Base(36) "1" becomes "y" and vice versa. Furthermore, a "~" (tilde character) is appended to the output.
+In case of a negative numbers, all digits are swapped for their corresponding pair counting from the end of the digi alphabet. E.g. in Base(10) a "2" becomes "7" and vice versa, in Base(36) "1" becomes "y" and vice versa. Furthermore, a "~" (tilde character) is appended to the output for negative numbers, even integers.
 
 The fractional part is separated from the integral part by "." (period) in case of positive numbers, and by a "~" (tilde) for negative ones.
 When encoding fractional numbers, you have to define the number of decimal digits to keep. The input value will be rounded accordingly before processing.

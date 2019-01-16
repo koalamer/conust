@@ -25,9 +25,11 @@ const digit9 byte = '9'
 const digitA byte = 'a'
 const digitZ byte = 'z'
 
-const signPositive byte = '9'
-const signNegative byte = '0'
+const signNegative36 byte = '3'
+const signNegative10 byte = '4'
 const zeroOutput = "5"
+const signPositive10 byte = '6'
+const signPositive36 byte = '7'
 
 const builderInitialCap = 7
 
@@ -89,11 +91,11 @@ func B36FromI64(i int64) (s string) {
 	b.Grow(builderInitialCap)
 	var number string
 	if i > 0 {
-		b.WriteByte(signPositive)
+		b.WriteByte(signPositive36)
 		number = strconv.FormatInt(i, 36)
 		intStringToB36(&b, true, number)
 	} else {
-		b.WriteByte(signNegative)
+		b.WriteByte(signNegative36)
 		number = strconv.FormatInt(i*-1, 36)
 		intStringToB36(&b, false, number)
 	}
@@ -169,10 +171,10 @@ func b10FromIntString(positive bool, absNumber string) string {
 	var b strings.Builder
 	b.Grow(builderInitialCap)
 	if positive {
-		b.WriteByte(signPositive)
+		b.WriteByte(signPositive10)
 		intStringToB10(&b, true, absNumber)
 	} else {
-		b.WriteByte(signNegative)
+		b.WriteByte(signNegative10)
 		intStringToB10(&b, false, absNumber)
 	}
 	return b.String()
@@ -213,7 +215,7 @@ func intToReversedDigit36(i int) byte {
 }
 
 func decodeStrings(s string, intOnly bool, flipDigit func(byte) byte) (integral string, fractional string) {
-	isPositive := (s[0] == signPositive)
+	isPositive := (s[0] < zeroOutput[0])
 	var terminator byte
 	var intLength int
 
