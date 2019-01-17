@@ -110,3 +110,120 @@ func TestNamedBytes(t *testing.T) {
 		t.Fatal("trailing0 is not the [0] digit")
 	}
 }
+
+func TestDecimalSeparatorBytes(t *testing.T) {
+	if positiveIntegerTerminator >= digits36[0] {
+		t.Fatal("the positive decimal separator is not smaller than the digits")
+	}
+	if negativeIntegerTerminator <= digits36[35] {
+		t.Fatal("the negative decimal separator is not smaller than the digits")
+	}
+}
+
+func TestConversionI64(t *testing.T) {
+	int64tests := []struct {
+		name       string
+		number     int64
+		b10Version string
+		b36Version string
+	}{
+		{"minimum", int64(-9223372036854775807), "4g0776627963145224192~", "3my1xazhgwxlrls~"},
+		{"bigNegativeWithTrailingZeroes", int64(-9223372030000000000), "4g077662796~", "3my1xazhk2aregv~"},
+		{"divisibleBy36Negative", -1959552, "4s8040447~", "3uyt~"},
+		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "3uv8j5r~"},
+		{"minusEight", -8, "4y1~", "3yr~"},
+		{"minusOne", -1, "4y8~", "3yy~"},
+		{"zero", 0, "5", "5"},
+		{"one", 1, "611", "711"},
+		{"eight", 8, "618", "718"},
+		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "754rgu8"},
+		{"divisibleBy36", 1959552, "671959552", "7516"},
+		{"bigPositiveWithTrailingZeroes", int64(9223372030000000000), "6j922337203", "7d1y2p0ifxp8lj4"},
+		{"maximum", int64(9223372036854775807), "6j9223372036854775807", "7d1y2p0ij32e8e7"},
+	}
+
+	for _, test := range int64tests {
+		t.Run(test.name, func(t *testing.T) {
+			b10 := B10FromI64(test.number)
+			b36 := B36FromI64(test.number)
+
+			if b10 != test.b10Version {
+				t.Fatalf("B10 form for %d: '%s' instead of '%s'\n", test.number, b10, test.b10Version)
+			}
+
+			if b36 != test.b36Version {
+				t.Fatalf("B36 form for %d: '%s' instead of '%s'\n", test.number, b36, test.b36Version)
+			}
+
+			var ib10 int64
+			var ib36 int64
+
+			defer func() {
+				if ib10 != test.number {
+					t.Fatalf("B10 form decoding error: got %d instead of %d\n", ib10, test.number)
+				}
+
+				if b36 != test.b36Version {
+					t.Fatalf("B36 form decoding error: got %d instead of %d\n", ib36, test.number)
+				}
+			}()
+
+			ib10, _ = B10ToI64(b10)
+			ib36, _ = B36ToI64(b36)
+		})
+	}
+}
+
+func TestConversionI32(t *testing.T) {
+	int64tests := []struct {
+		name       string
+		number     int32
+		b10Version string
+		b36Version string
+	}{
+		{"minimum", -2147483647, "4p7852516352~", "3t0hfz0g~"},
+		{"bigNegativeWithTrailingZeroes", -2147480000, "4p785251~", "3t0hg1tr~"},
+		{"divisibleBy36Negative", -1959552, "4s8040447~", "3uyt~"},
+		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "3uv8j5r~"},
+		{"minusEight", -8, "4y1~", "3yr~"},
+		{"minusOne", -1, "4y8~", "3yy~"},
+		{"zero", 0, "5", "5"},
+		{"one", 1, "611", "711"},
+		{"eight", 8, "618", "718"},
+		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "754rgu8"},
+		{"divisibleBy36", 1959552, "671959552", "7516"},
+		{"bigPositiveWithTrailingZeroes", 2147480000, "6a214748", "76zijy68"},
+		{"maximum", 2147483647, "6a2147483647", "76zik0zj"},
+	}
+
+	for _, test := range int64tests {
+		t.Run(test.name, func(t *testing.T) {
+			b10 := B10FromI32(test.number)
+			b36 := B36FromI32(test.number)
+
+			if b10 != test.b10Version {
+				t.Fatalf("B10 form for %d: '%s' instead of '%s'\n", test.number, b10, test.b10Version)
+			}
+
+			if b36 != test.b36Version {
+				t.Fatalf("B36 form for %d: '%s' instead of '%s'\n", test.number, b36, test.b36Version)
+			}
+
+			var ib10 int32
+			var ib36 int32
+
+			defer func() {
+				if ib10 != test.number {
+					t.Fatalf("B10 form decoding error: got %d instead of %d\n", ib10, test.number)
+				}
+
+				if b36 != test.b36Version {
+					t.Fatalf("B36 form decoding error: got %d instead of %d\n", ib36, test.number)
+				}
+			}()
+
+			ib10, _ = B10ToI32(b10)
+			ib36, _ = B36ToI32(b36)
+		})
+	}
+}

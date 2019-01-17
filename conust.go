@@ -121,7 +121,6 @@ func B36ToI64(s string) (i int64, ok bool) {
 	}
 	intPart, _ := decodeStrings(s, true, flipDigit36)
 	result, err := strconv.ParseInt(intPart, 36, 64)
-	fmt.Println("b36 decode raw", intPart, "error", err)
 	return result, (err == nil)
 }
 
@@ -215,7 +214,7 @@ func intToReversedDigit36(i int) byte {
 }
 
 func decodeStrings(s string, intOnly bool, flipDigit func(byte) byte) (integral string, fractional string) {
-	isPositive := (s[0] < zeroOutput[0])
+	isPositive := (s[0] > zeroOutput[0])
 	var terminator byte
 	var intLength int
 
@@ -255,6 +254,9 @@ func decodeStrings(s string, intOnly bool, flipDigit func(byte) byte) (integral 
 		}
 	}
 	if bLength := b.Len(); bLength <= intLength {
+		if !isPositive {
+			bLength--
+		}
 		for i := bLength; i < intLength; i++ {
 			b.WriteByte('0')
 		}
