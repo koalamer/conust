@@ -2,9 +2,26 @@ package conust
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
+
+// Encoder turns numbers or decimal strings to Conust strings
+type Encoder interface {
+	FromString(string) string
+	FromInt32(int32) string
+	FromInt64(int64) string
+	FromFloat32(float32) string
+	FromFloat64(float64) string
+}
+
+// Decoder turns Conust strings back to numbers or decimal strings
+type Decoder interface {
+	ToString(string) (string, bool)
+	ToInt32(string) (int32, bool)
+	ToInt64(string) (int64, bool)
+	ToFloat32(string) (float32, bool)
+	ToFloat64(string) (float64, bool)
+}
 
 // not used, it is a subset of digits36
 // var digits10 = [...]byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
@@ -25,166 +42,29 @@ const digit9 byte = '9'
 const digitA byte = 'a'
 const digitZ byte = 'z'
 
-const signNegative36 byte = '3'
-const signNegative10 byte = '4'
+const signNegative byte = '4'
 const zeroOutput = "5"
-const signPositive10 byte = '6'
-const signPositive36 byte = '7'
+const signPositive byte = '6'
 
 const builderInitialCap = 7
 
 const trailing0 = "0"
 
-// TODO are these decimal points ok?
 const positiveIntegerTerminator byte = '.'
 const negativeIntegerTerminator byte = '~'
-
-// B10FromI32 encodes int32 into sortable string using decimal digits
-func B10FromI32(i int32) (s string) {
-	if i == 0 {
-		return zeroOutput
-	}
-	return b10FromIntString(int32Preproc(i))
-}
-
-// B10ToI32 decodes string into int32
-// Successfulness of the decoding is signalled by the second return value. A failure is possible when the encoded number is out of the range of the int32 type.
-func B10ToI32(s string) (i int32, ok bool) {
-	if s == zeroOutput {
-		return 0, true
-	}
-	intPart, _ := decodeStrings(s, true, flipDigit10)
-	result, err := strconv.ParseInt(intPart, 10, 32)
-	return int32(result), (err == nil)
-}
-
-// B10FromI64 encodes int64 into sortable string using decimal digits
-func B10FromI64(i int64) (s string) {
-	if i == 0 {
-		return zeroOutput
-	}
-	return b10FromIntString(int64Preproc(i))
-}
-
-// B10ToI64 decodes string into int32
-// Successfulness of the decoding is signalled by the second return value. A failure is possible when the encoded number is out of the range of the int32 type.
-func B10ToI64(s string) (i int64, ok bool) {
-	if s == zeroOutput {
-		return 0, true
-	}
-	intPart, _ := decodeStrings(s, true, flipDigit10)
-	result, err := strconv.ParseInt(intPart, 10, 64)
-	return result, (err == nil)
-}
-
-// B36FromI32 encodes int32 into sortable string using Base(36) digits
-func B36FromI32(i int32) (s string) {
-	return B36FromI64(int64(i))
-}
-
-// B36FromI64 encodes int64 into sortable string using Base(36) digits
-func B36FromI64(i int64) (s string) {
-	if i == 0 {
-		return zeroOutput
-	}
-	var b strings.Builder
-	b.Grow(builderInitialCap)
-	var number string
-	if i > 0 {
-		b.WriteByte(signPositive36)
-		number = strconv.FormatInt(i, 36)
-		intStringToB36(&b, true, number)
-	} else {
-		b.WriteByte(signNegative36)
-		number = strconv.FormatInt(i*-1, 36)
-		intStringToB36(&b, false, number)
-	}
-	return b.String()
-}
-
-// B36ToI32 decodes string into int32
-// Successfulness of the decoding is signalled by the second return value. A failure is possible when the encoded number is out of the range of the int32 type.
-func B36ToI32(s string) (i int32, ok bool) {
-	if s == zeroOutput {
-		return 0, true
-	}
-	intPart, _ := decodeStrings(s, true, flipDigit36)
-	result, err := strconv.ParseInt(intPart, 36, 32)
-	return int32(result), (err == nil)
-}
-
-// B36ToI64 decodes string into int32
-// Successfulness of the decoding is signalled by the second return value. A failure is possible when the encoded number is out of the range of the int32 type.
-func B36ToI64(s string) (i int64, ok bool) {
-	if s == zeroOutput {
-		return 0, true
-	}
-	intPart, _ := decodeStrings(s, true, flipDigit36)
-	result, err := strconv.ParseInt(intPart, 36, 64)
-	return result, (err == nil)
-}
-
-func intStringToB10(b *strings.Builder, positive bool, number string) {
-	if positive {
-		b.WriteByte(intToDigit36(len(number)))
-		b.WriteString(strings.TrimRight(number, trailing0))
-	} else {
-		b.WriteByte(intToReversedDigit36(len(number)))
-		number = strings.TrimRight(number, trailing0)
-		for j := 0; j < len(number); j++ {
-			b.WriteByte(flipDigit10(number[j]))
-		}
-		b.WriteByte(negativeIntegerTerminator)
-	}
-}
-
-func intStringToB36(b *strings.Builder, positive bool, number string) {
-	if positive {
-		b.WriteByte(intToDigit36(len(number)))
-		b.WriteString(strings.TrimRight(number, trailing0))
-	} else {
-		b.WriteByte(intToReversedDigit36(len(number)))
-		number = strings.TrimRight(number, trailing0)
-		for j := 0; j < len(number); j++ {
-			b.WriteByte(flipDigit36(number[j]))
-		}
-		b.WriteByte(negativeIntegerTerminator)
-	}
-}
 
 func int32Preproc(i int32) (positive bool, number string) {
 	if i > 0 {
 		return true, fmt.Sprintf("%d", i)
 	}
-	return false, fmt.Sprintf("%d", i*-1)
+	return false, fmt.Sprintf("%d", i)[1:]
 }
 
 func int64Preproc(i int64) (positive bool, absNumber string) {
 	if i > 0 {
 		return true, fmt.Sprintf("%d", i)
 	}
-	return false, fmt.Sprintf("%d", i*-1)
-}
-
-func b10FromIntString(positive bool, absNumber string) string {
-	var b strings.Builder
-	b.Grow(builderInitialCap)
-	if positive {
-		b.WriteByte(signPositive10)
-		intStringToB10(&b, true, absNumber)
-	} else {
-		b.WriteByte(signNegative10)
-		intStringToB10(&b, false, absNumber)
-	}
-	return b.String()
-}
-
-func flipDigit10(digit byte) byte {
-	return intToReversedDigit10(digitToInt(digit))
-}
-
-func flipDigit36(digit byte) byte {
-	return intToReversedDigit36(digitToInt(digit))
+	return false, fmt.Sprintf("%d", i)[1:]
 }
 
 func digitToInt(digit byte) int {
@@ -201,7 +81,7 @@ func reversedDigitToInt(digit byte) int {
 	return int(digitZ - digit)
 }
 
-func intToDigit36(i int) byte {
+func intToDigit(i int) byte {
 	return digits36[i]
 }
 
@@ -211,6 +91,14 @@ func intToReversedDigit10(i int) byte {
 
 func intToReversedDigit36(i int) byte {
 	return digits36Reversed[i]
+}
+
+func flipDigit10(digit byte) byte {
+	return intToReversedDigit10(digitToInt(digit))
+}
+
+func flipDigit36(digit byte) byte {
+	return intToReversedDigit36(digitToInt(digit))
 }
 
 func decodeStrings(s string, intOnly bool, flipDigit func(byte) byte) (integral string, fractional string) {

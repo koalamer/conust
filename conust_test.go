@@ -60,32 +60,11 @@ func TestArraySortedness(t *testing.T) {
 }
 
 func TestSignBytes(t *testing.T) {
-	if string(signNegative10) >= zeroOutput {
-		t.Fatal("signNegative10 is not smaller than zeroOutput")
+	if string(signNegative) >= zeroOutput {
+		t.Fatal("signNegative is not smaller than zeroOutput")
 	}
-	if signNegative10%2 != 0 {
-		t.Fatal("signNegative10 is not even")
-	}
-
-	if string(signPositive10) <= zeroOutput {
-		t.Fatal("signPositive10 is not bigger than zeroOutput")
-	}
-	if signPositive10%2 != 0 {
-		t.Fatal("signPositive10 is not even")
-	}
-
-	if string(signNegative36) >= zeroOutput {
-		t.Fatal("signNegative36 is not smaller than zeroOutput")
-	}
-	if signNegative36%2 != 1 {
-		t.Fatal("signNegative36 is not odd")
-	}
-
-	if string(signPositive36) <= zeroOutput {
-		t.Fatal("signPositive36 is not bigger than zeroOutput")
-	}
-	if signPositive36%2 != 1 {
-		t.Fatal("signPositive36 is not odd")
+	if string(signPositive) <= zeroOutput {
+		t.Fatal("signPositive is not bigger than zeroOutput")
 	}
 }
 
@@ -127,25 +106,27 @@ func TestConversionI64(t *testing.T) {
 		b10Version string
 		b36Version string
 	}{
-		{"minimum", int64(-9223372036854775807), "4g0776627963145224192~", "3my1xazhgwxlrls~"},
-		{"bigNegativeWithTrailingZeroes", int64(-9223372030000000000), "4g077662796~", "3my1xazhk2aregv~"},
-		{"divisibleBy36Negative", -1959552, "4s8040447~", "3uyt~"},
-		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "3uv8j5r~"},
-		{"minusEight", -8, "4y1~", "3yr~"},
-		{"minusOne", -1, "4y8~", "3yy~"},
+		{"minimum", int64(-9223372036854775808), "4g0776627963145224191~", "4my1xazhgwxlrlr~"},
+		{"bigNegativeWithTrailingZeroes", int64(-9223372030000000000), "4g077662796~", "4my1xazhk2aregv~"},
+		{"divisibleBy36Negative", -1959552, "4s8040447~", "4uyt~"},
+		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "4uv8j5r~"},
+		{"minusEight", -8, "4y1~", "4yr~"},
+		{"minusOne", -1, "4y8~", "4yy~"},
 		{"zero", 0, "5", "5"},
-		{"one", 1, "611", "711"},
-		{"eight", 8, "618", "718"},
-		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "754rgu8"},
-		{"divisibleBy36", 1959552, "671959552", "7516"},
-		{"bigPositiveWithTrailingZeroes", int64(9223372030000000000), "6j922337203", "7d1y2p0ifxp8lj4"},
-		{"maximum", int64(9223372036854775807), "6j9223372036854775807", "7d1y2p0ij32e8e7"},
+		{"one", 1, "611", "611"},
+		{"eight", 8, "618", "618"},
+		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "654rgu8"},
+		{"divisibleBy36", 1959552, "671959552", "6516"},
+		{"bigPositiveWithTrailingZeroes", int64(9223372030000000000), "6j922337203", "6d1y2p0ifxp8lj4"},
+		{"maximum", int64(9223372036854775807), "6j9223372036854775807", "6d1y2p0ij32e8e7"},
 	}
 
 	for _, test := range int64tests {
 		t.Run(test.name, func(t *testing.T) {
-			b10 := B10FromI64(test.number)
-			b36 := B36FromI64(test.number)
+			enc10 := NewBase10Encoder()
+			enc36 := NewBase36Encoder()
+			b10 := enc10.FromInt64(test.number)
+			b36 := enc36.FromInt64(test.number)
 
 			if b10 != test.b10Version {
 				t.Fatalf("B10 form for %d: '%s' instead of '%s'\n", test.number, b10, test.b10Version)
@@ -168,8 +149,10 @@ func TestConversionI64(t *testing.T) {
 				}
 			}()
 
-			ib10, _ = B10ToI64(b10)
-			ib36, _ = B36ToI64(b36)
+			dec10 := NewBase10Decoder()
+			dec36 := NewBase36Decoder()
+			ib10, _ = dec10.ToInt64(b10)
+			ib36, _ = dec36.ToInt64(b36)
 		})
 	}
 }
@@ -181,25 +164,27 @@ func TestConversionI32(t *testing.T) {
 		b10Version string
 		b36Version string
 	}{
-		{"minimum", -2147483647, "4p7852516352~", "3t0hfz0g~"},
-		{"bigNegativeWithTrailingZeroes", -2147480000, "4p785251~", "3t0hg1tr~"},
-		{"divisibleBy36Negative", -1959552, "4s8040447~", "3uyt~"},
-		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "3uv8j5r~"},
-		{"minusEight", -8, "4y1~", "3yr~"},
-		{"minusOne", -1, "4y8~", "3yy~"},
+		{"minimum", -2147483648, "4p7852516351~", "4t0hfz0f~"},
+		{"bigNegativeWithTrailingZeroes", -2147480000, "4p785251~", "4t0hg1tr~"},
+		{"divisibleBy36Negative", -1959552, "4s8040447~", "4uyt~"},
+		{"mediumNegativeWitTrailingZeroes", -8000000, "4s1~", "4uv8j5r~"},
+		{"minusEight", -8, "4y1~", "4yr~"},
+		{"minusOne", -1, "4y8~", "4yy~"},
 		{"zero", 0, "5", "5"},
-		{"one", 1, "611", "711"},
-		{"eight", 8, "618", "718"},
-		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "754rgu8"},
-		{"divisibleBy36", 1959552, "671959552", "7516"},
-		{"bigPositiveWithTrailingZeroes", 2147480000, "6a214748", "76zijy68"},
-		{"maximum", 2147483647, "6a2147483647", "76zik0zj"},
+		{"one", 1, "611", "611"},
+		{"eight", 8, "618", "618"},
+		{"mediumPositiveWithTrailingZeroes", 8000000, "678", "654rgu8"},
+		{"divisibleBy36", 1959552, "671959552", "6516"},
+		{"bigPositiveWithTrailingZeroes", 2147480000, "6a214748", "66zijy68"},
+		{"maximum", 2147483647, "6a2147483647", "66zik0zj"},
 	}
 
 	for _, test := range int64tests {
 		t.Run(test.name, func(t *testing.T) {
-			b10 := B10FromI32(test.number)
-			b36 := B36FromI32(test.number)
+			enc10 := NewBase10Encoder()
+			enc36 := NewBase36Encoder()
+			b10 := enc10.FromInt32(test.number)
+			b36 := enc36.FromInt32(test.number)
 
 			if b10 != test.b10Version {
 				t.Fatalf("B10 form for %d: '%s' instead of '%s'\n", test.number, b10, test.b10Version)
@@ -222,8 +207,10 @@ func TestConversionI32(t *testing.T) {
 				}
 			}()
 
-			ib10, _ = B10ToI32(b10)
-			ib36, _ = B36ToI32(b36)
+			dec10 := NewBase10Decoder()
+			dec36 := NewBase36Decoder()
+			ib10, _ = dec10.ToInt32(b10)
+			ib36, _ = dec36.ToInt32(b36)
 		})
 	}
 }
