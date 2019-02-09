@@ -12,9 +12,9 @@ func NewBase36Encoder() Encoder {
 	return base36Encoder{}
 }
 
-func (e base36Encoder) FromString(s string) string {
+func (e base36Encoder) FromString(s string) (string, bool) {
 	// TODO
-	return ""
+	return "", false
 }
 
 // FromInt32 turns input number into a base(36) Conust string

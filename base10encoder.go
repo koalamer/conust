@@ -4,7 +4,17 @@ import (
 	"strings"
 )
 
-type base10Encoder struct{}
+type base10Encoder struct {
+	isEmpty                  bool
+	isZero                   bool
+	isPositive               bool
+	intStart                 int
+	intSignificantPartEnd    int
+	intEnd                   int
+	fracLeadingZeroCount     int
+	fracSignificantPartStart int
+	fracEnd                  int
+}
 
 // NewBase10Encoder returns an encoder that outputs base(10) Conust strings
 func NewBase10Encoder() Encoder {
@@ -12,9 +22,110 @@ func NewBase10Encoder() Encoder {
 }
 
 //FromString turns input number into a base(10) Conust string
-func (e base10Encoder) FromString(s string) string {
-	//TODO
-	return ""
+func (e base10Encoder) FromString(s string) (out string, ok bool) {
+	// TODO
+	return "", false
+}
+
+func (e base10Encoder) analyzeInput(s string) bool {
+	length := len(s)
+	// empty input results in empty but ok output
+	if length == 0 {
+		e.isEmpty = true
+		return true
+	}
+
+	i := 0
+
+	// determine sign
+	switch s[0] {
+	case minusByte:
+		e.isPositive = false
+		i++
+	case plusByte:
+		e.isPositive = true
+		i++
+	default:
+		e.isPositive = true
+	}
+	// a sign only is bad input
+	if i >= length {
+		return false
+	}
+
+	// skip leading zeroes
+	for ; i < length && s[i] == digit0; i++ {
+	}
+
+	// if there were only zeroes, the result is zeroOutput
+	if i >= length {
+		e.isZero = true
+		return true
+	}
+
+	// determine integer part bounds
+	e.intStart = i
+	trailingZeroCount := 0
+	for ; i < length; i++ {
+		if s[i] == positiveIntegerTerminator {
+			break
+		}
+		if s[i] == digit0 {
+			trailingZeroCount++
+			continue
+		}
+		if s[i] > digit9 || s[i] < digit0 {
+			return false
+		}
+		if trailingZeroCount != 0 {
+			trailingZeroCount = 0
+		}
+	}
+	e.intSignificantPartEnd = (i - 1) - trailingZeroCount
+	e.intEnd = (i - 1)
+
+	// init fraction variables
+	e.fracSignificantPartStart = -1
+	e.fracEnd = -1
+	e.fracLeadingZeroCount = 0
+
+	// if no fraction present, end processing
+	if i >= length-1 {
+		return true
+	}
+
+	// skip over decimal separator
+	i++
+
+	// process fraction part
+	e.fracSignificantPartStart = i
+	for ; i < length && s[i] == digit0; i++ {
+	}
+
+	// fraction contains only zeroes
+	if i >= length {
+		e.fracSignificantPartStart = -1
+		e.fracEnd = -1
+		return true
+	}
+
+	e.fracLeadingZeroCount = i - e.fracSignificantPartStart
+	e.fracSignificantPartStart = i
+	trailingZeroCount = 0
+	for ; i < length; i++ {
+		if s[i] == digit0 {
+			trailingZeroCount++
+			continue
+		}
+		if s[i] > digit9 || s[i] < digit0 {
+			return false
+		}
+		if trailingZeroCount != 0 {
+			trailingZeroCount = 0
+		}
+	}
+	e.fracEnd = (i - 1) - trailingZeroCount
+	return true
 }
 
 // FromI32 turns input number into a base(10) Conust string

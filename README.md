@@ -1,6 +1,6 @@
 # CONUST
 
-TODO: fractionals, doc, accept minimum ints, benchmark optimisation, ports
+TODO: make string conversion the default and examine string before building, fractionals, doc, benchmark optimisation, ports
 
 A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation.
 
@@ -10,7 +10,7 @@ Trailing zeros of the integral part are encoded in one byte, and the leading zer
 
 ## Encoded Format Description
 
-The zero value is transformed to simply the zero character ("5"). 
+The zero value is transformed to simply the zero character ("5").
 
 The first character of the output will be "6" for positive numbers, and "4" for negative numbers.
 
@@ -23,5 +23,5 @@ The fractional part is separated from the integral part by "." (period) in case 
 When encoding fractional numbers, you have to define the number of fractional digits to keep. The fractional input value will be rounded accordingly before processing.
 
 If the number has a non zero fractional part, the output continues with the decimal separator character approppriate for the sign of the number (which is "." for positive and "~" for negative numbers).
-The output will contain the number of leading zero digits of the fractional part in its new base encoded in a single digit. 
+The output will contain the number of leading zero digits of the fractional part in its new base encoded in a single digit.
 Finally the remainig digits of the fractional part are output.

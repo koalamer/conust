@@ -2,12 +2,13 @@ package conust
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 // Encoder turns numbers or decimal strings to Conust strings
 type Encoder interface {
-	FromString(string) string
+	FromString(string) (string, bool)
 	FromInt32(int32) string
 	FromInt64(int64) string
 	FromFloat32(float32) string
@@ -41,6 +42,8 @@ const digit0 byte = '0'
 const digit9 byte = '9'
 const digitA byte = 'a'
 const digitZ byte = 'z'
+const minusByte byte = '-'
+const plusByte byte = '+'
 
 const signNegative byte = '4'
 const zeroOutput = "5"
@@ -53,18 +56,32 @@ const trailing0 = "0"
 const positiveIntegerTerminator byte = '.'
 const negativeIntegerTerminator byte = '~'
 
-func int32Preproc(i int32) (positive bool, number string) {
-	if i > 0 {
-		return true, fmt.Sprintf("%d", i)
+func int32Preproc(i int32) (positive bool, absNumber string) {
+	if i < 0 {
+		return false, fmt.Sprintf("%d", i)[1:]
 	}
-	return false, fmt.Sprintf("%d", i)[1:]
+	return true, fmt.Sprintf("%d", i)
 }
 
 func int64Preproc(i int64) (positive bool, absNumber string) {
-	if i > 0 {
-		return true, fmt.Sprintf("%d", i)
+	if i < 0 {
+		return false, fmt.Sprintf("%d", i)[1:]
 	}
-	return false, fmt.Sprintf("%d", i)[1:]
+	return true, fmt.Sprintf("%d", i)
+}
+
+func float32Preproc(f float32, precision int) (positive bool, absNumber string) {
+	if f < 0 {
+		return false, strconv.FormatFloat(float64(f), 'f', precision, 32)[1:]
+	}
+	return true, strconv.FormatFloat(float64(f), 'f', precision, 32)
+}
+
+func float64Preproc(f float64, precision int) (positive bool, absNumber string) {
+	if f < 0 {
+		return false, strconv.FormatFloat(f, 'f', precision, 64)[1:]
+	}
+	return true, strconv.FormatFloat(f, 'f', precision, 64)
 }
 
 func digitToInt(digit byte) int {
