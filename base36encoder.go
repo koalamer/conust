@@ -17,8 +17,8 @@ func (e base36Encoder) FromString(s string) (string, bool) {
 	return "", false
 }
 
-func (e base36Encoder) AnalyzeInput(s string) (ok bool) {
-	return false
+func (e base36Encoder) AnalyzeInput(s string) {
+	return
 }
 
 // FromInt32 turns input number into a base(36) Conust string

@@ -13,7 +13,7 @@ type Encoder interface {
 	FromInt64(int64) string
 	FromFloat32(float32) string
 	FromFloat64(float64) string
-	AnalyzeInput(string) bool
+	AnalyzeInput(string)
 }
 
 // Decoder turns Conust strings back to numbers or decimal strings

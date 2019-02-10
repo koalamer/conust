@@ -249,31 +249,31 @@ func TestAnalysis(t *testing.T) {
 	enc := (NewBase10Encoder()).(*Base10Encoder)
 	for _, i := range analysisTests {
 		t.Run(i.name, func(t *testing.T) {
-			ok := enc.AnalyzeInput(i.input)
+			enc.AnalyzeInput(i.input)
 
-			if i.ok != ok {
-				t.Fatalf("OK expected: %v, got %v\n", i.ok, ok)
+			if i.ok != enc.ok {
+				t.Fatalf("OK expected: %v, got %v\n", i.ok, enc.ok)
 			}
 			if !i.ok {
 				return
 			}
 
-			if i.empty != enc.isEmpty {
-				t.Fatalf("isEmpty expected: %v, got %v\n", i.empty, enc.isEmpty)
+			if i.empty != enc.empty {
+				t.Fatalf("isEmpty expected: %v, got %v\n", i.empty, enc.empty)
 			}
 			if i.empty {
 				return
 			}
 
-			if i.zero != enc.isZero {
-				t.Fatalf("isZero expected: %v, got %v\n", i.zero, enc.isZero)
+			if i.zero != enc.zero {
+				t.Fatalf("isZero expected: %v, got %v\n", i.zero, enc.zero)
 			}
 			if i.zero {
 				return
 			}
 
-			if i.positive != enc.isPositive {
-				t.Fatalf("isZero expected: %v, got %v\n", i.positive, enc.isPositive)
+			if i.positive != enc.positive {
+				t.Fatalf("isZero expected: %v, got %v\n", i.positive, enc.positive)
 			}
 
 			tempIntNZ := i.input[enc.intNonZeroFrom:enc.intNonZeroTo]

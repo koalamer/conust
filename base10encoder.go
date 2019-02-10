@@ -1,15 +1,15 @@
 package conust
 
 import (
-	"fmt"
 	"strings"
 )
 
 // Base10Encoder is the base 10 variant of the encoder
 type Base10Encoder struct {
-	isEmpty              bool
-	isZero               bool
-	isPositive           bool
+	ok                   bool
+	empty                bool
+	zero                 bool
+	positive             bool
 	intNonZeroFrom       int
 	intNonZeroTo         int
 	intEnd               int
@@ -30,37 +30,39 @@ func (e Base10Encoder) FromString(s string) (out string, ok bool) {
 }
 
 // AnalyzeInput disects identifies useful parts of the input and stores markers internally
-func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
-	defer func() {
+func (e *Base10Encoder) AnalyzeInput(s string) {
+	/* defer func() {
 		fmt.Printf("Input: %q, ok: %v, empty: %-5v, zero: %-5v, positive: %-5v\n", s, ok, e.isEmpty, e.isZero, e.isPositive)
 		fmt.Printf("  int nz start: %-3d, nz end: %-3d, end: %-3d\n", e.intNonZeroFrom, e.intNonZeroTo, e.intEnd)
 		fmt.Printf("  frac leading z count: %-3d, nz start: %-3d, nz end: %-3d\n", e.fracLeadingZeroCount, e.fracNonZeroFrom, e.fracNonZeroTo)
-	}()
+	}() */
 	length := len(s)
 	// empty input results in empty but ok output
 	if length == 0 {
-		e.isEmpty = true
-		return true
+		e.ok = true
+		e.empty = true
+		return
 	}
 
-	e.isEmpty = false
-	e.isZero = true
+	e.empty = false
+	e.zero = true
 	i := 0
 
 	// determine sign
 	switch s[0] {
 	case minusByte:
-		e.isPositive = false
+		e.positive = false
 		i++
 	case plusByte:
-		e.isPositive = true
+		e.positive = true
 		i++
 	default:
-		e.isPositive = true
+		e.positive = true
 	}
 	// a sign only is bad input
 	if i >= length {
-		return false
+		e.ok = false
+		return
 	}
 
 	// skip leading zeroes
@@ -69,7 +71,8 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 
 	// if there were only zeroes, the result is zeroOutput
 	if i >= length {
-		return true
+		e.ok = true
+		return
 	}
 
 	// determine integer part bounds
@@ -84,7 +87,8 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 			continue
 		}
 		if s[i] > digit9 || s[i] < digit0 {
-			return false
+			e.ok = false
+			return
 		}
 		if trailingZeroCount != 0 {
 			trailingZeroCount = 0
@@ -93,7 +97,7 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 	e.intNonZeroTo = i - trailingZeroCount
 	e.intEnd = (i - 1)
 	if e.intNonZeroFrom <= e.intEnd {
-		e.isZero = false
+		e.zero = false
 	}
 
 	// init fraction variables
@@ -103,7 +107,8 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 
 	// if no fraction present, end processing
 	if i >= length-1 {
-		return true
+		e.ok = true
+		return
 	}
 
 	// skip over decimal separator
@@ -117,10 +122,11 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 	// fraction contains only zeroes
 	if i >= length {
 		e.fracNonZeroFrom = 0
-		return true
+		e.ok = true
+		return
 	}
 
-	e.isZero = false
+	e.zero = false
 	e.fracLeadingZeroCount = i - e.fracNonZeroFrom
 	e.fracNonZeroFrom = i
 	trailingZeroCount = 0
@@ -130,14 +136,16 @@ func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
 			continue
 		}
 		if s[i] > digit9 || s[i] < digit0 {
-			return false
+			e.ok = false
+			return
 		}
 		if trailingZeroCount != 0 {
 			trailingZeroCount = 0
 		}
 	}
 	e.fracNonZeroTo = i - trailingZeroCount
-	return true
+	e.ok = true
+	return
 }
 
 // FromInt32 turns input number into a base(10) Conust string
