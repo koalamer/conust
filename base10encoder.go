@@ -1,33 +1,41 @@
 package conust
 
 import (
+	"fmt"
 	"strings"
 )
 
-type base10Encoder struct {
-	isEmpty                  bool
-	isZero                   bool
-	isPositive               bool
-	intStart                 int
-	intSignificantPartEnd    int
-	intEnd                   int
-	fracLeadingZeroCount     int
-	fracSignificantPartStart int
-	fracEnd                  int
+// Base10Encoder is the base 10 variant of the encoder
+type Base10Encoder struct {
+	isEmpty              bool
+	isZero               bool
+	isPositive           bool
+	intNonZeroFrom       int
+	intNonZeroTo         int
+	intEnd               int
+	fracLeadingZeroCount int
+	fracNonZeroFrom      int
+	fracNonZeroTo        int
 }
 
 // NewBase10Encoder returns an encoder that outputs base(10) Conust strings
 func NewBase10Encoder() Encoder {
-	return base10Encoder{}
+	return &Base10Encoder{}
 }
 
 //FromString turns input number into a base(10) Conust string
-func (e base10Encoder) FromString(s string) (out string, ok bool) {
+func (e Base10Encoder) FromString(s string) (out string, ok bool) {
 	// TODO
 	return "", false
 }
 
-func (e base10Encoder) analyzeInput(s string) bool {
+// AnalyzeInput disects identifies useful parts of the input and stores markers internally
+func (e *Base10Encoder) AnalyzeInput(s string) (ok bool) {
+	defer func() {
+		fmt.Printf("Input: %q, ok: %v, empty: %-5v, zero: %-5v, positive: %-5v\n", s, ok, e.isEmpty, e.isZero, e.isPositive)
+		fmt.Printf("  int nz start: %-3d, nz end: %-3d, end: %-3d\n", e.intNonZeroFrom, e.intNonZeroTo, e.intEnd)
+		fmt.Printf("  frac leading z count: %-3d, nz start: %-3d, nz end: %-3d\n", e.fracLeadingZeroCount, e.fracNonZeroFrom, e.fracNonZeroTo)
+	}()
 	length := len(s)
 	// empty input results in empty but ok output
 	if length == 0 {
@@ -35,6 +43,8 @@ func (e base10Encoder) analyzeInput(s string) bool {
 		return true
 	}
 
+	e.isEmpty = false
+	e.isZero = true
 	i := 0
 
 	// determine sign
@@ -59,12 +69,11 @@ func (e base10Encoder) analyzeInput(s string) bool {
 
 	// if there were only zeroes, the result is zeroOutput
 	if i >= length {
-		e.isZero = true
 		return true
 	}
 
 	// determine integer part bounds
-	e.intStart = i
+	e.intNonZeroFrom = i
 	trailingZeroCount := 0
 	for ; i < length; i++ {
 		if s[i] == positiveIntegerTerminator {
@@ -81,12 +90,15 @@ func (e base10Encoder) analyzeInput(s string) bool {
 			trailingZeroCount = 0
 		}
 	}
-	e.intSignificantPartEnd = (i - 1) - trailingZeroCount
+	e.intNonZeroTo = i - trailingZeroCount
 	e.intEnd = (i - 1)
+	if e.intNonZeroFrom <= e.intEnd {
+		e.isZero = false
+	}
 
 	// init fraction variables
-	e.fracSignificantPartStart = -1
-	e.fracEnd = -1
+	e.fracNonZeroFrom = 0
+	e.fracNonZeroTo = 0
 	e.fracLeadingZeroCount = 0
 
 	// if no fraction present, end processing
@@ -98,19 +110,19 @@ func (e base10Encoder) analyzeInput(s string) bool {
 	i++
 
 	// process fraction part
-	e.fracSignificantPartStart = i
+	e.fracNonZeroFrom = i
 	for ; i < length && s[i] == digit0; i++ {
 	}
 
 	// fraction contains only zeroes
 	if i >= length {
-		e.fracSignificantPartStart = -1
-		e.fracEnd = -1
+		e.fracNonZeroFrom = 0
 		return true
 	}
 
-	e.fracLeadingZeroCount = i - e.fracSignificantPartStart
-	e.fracSignificantPartStart = i
+	e.isZero = false
+	e.fracLeadingZeroCount = i - e.fracNonZeroFrom
+	e.fracNonZeroFrom = i
 	trailingZeroCount = 0
 	for ; i < length; i++ {
 		if s[i] == digit0 {
@@ -124,12 +136,12 @@ func (e base10Encoder) analyzeInput(s string) bool {
 			trailingZeroCount = 0
 		}
 	}
-	e.fracEnd = (i - 1) - trailingZeroCount
+	e.fracNonZeroTo = i - trailingZeroCount
 	return true
 }
 
-// FromI32 turns input number into a base(10) Conust string
-func (e base10Encoder) FromInt32(i int32) string {
+// FromInt32 turns input number into a base(10) Conust string
+func (e Base10Encoder) FromInt32(i int32) string {
 	if i == 0 {
 		return zeroOutput
 	}
@@ -137,7 +149,7 @@ func (e base10Encoder) FromInt32(i int32) string {
 }
 
 // FromInt64 turns input number into a base(10) Conust string
-func (e base10Encoder) FromInt64(i int64) string {
+func (e Base10Encoder) FromInt64(i int64) string {
 	if i == 0 {
 		return zeroOutput
 	}
@@ -145,18 +157,18 @@ func (e base10Encoder) FromInt64(i int64) string {
 }
 
 // FromFloat32 turns input number into a base(10) Conust string
-func (e base10Encoder) FromFloat32(f float32) string {
+func (e Base10Encoder) FromFloat32(f float32) string {
 	// TODO
 	return ""
 }
 
 // FromFloat64 turns input number into a base(10) Conust string
-func (e base10Encoder) FromFloat64(f float64) string {
+func (e Base10Encoder) FromFloat64(f float64) string {
 	// TODO
 	return ""
 }
 
-func (e base10Encoder) fromIntString(positive bool, absNumber string) string {
+func (e Base10Encoder) fromIntString(positive bool, absNumber string) string {
 	var b strings.Builder
 	b.Grow(builderInitialCap)
 	if positive {
@@ -169,7 +181,7 @@ func (e base10Encoder) fromIntString(positive bool, absNumber string) string {
 	return b.String()
 }
 
-func (e base10Encoder) encode(b *strings.Builder, positive bool, number string) {
+func (e Base10Encoder) encode(b *strings.Builder, positive bool, number string) {
 	if positive {
 		b.WriteByte(intToDigit(len(number)))
 		b.WriteString(strings.TrimRight(number, trailing0))

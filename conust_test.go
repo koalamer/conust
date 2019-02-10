@@ -214,3 +214,86 @@ func TestConversionI32(t *testing.T) {
 		})
 	}
 }
+
+func TestAnalysis(t *testing.T) {
+	analysisTests := []struct {
+		name     string
+		input    string
+		ok       bool
+		empty    bool
+		zero     bool
+		positive bool
+		intNZ    string
+		intLen   int
+		fracLZ   int
+		fracNZ   string
+	}{
+		{name: "bad input", input: "asdf", ok: false},
+		{name: "epmty", input: "", ok: true, empty: true},
+		{name: "minus only", input: "-", ok: false},
+		{name: "plus only", input: "-", ok: false},
+		{name: "minus zero", input: "-0", ok: true, empty: false, zero: true},
+		{name: "plus zero", input: "+0", ok: true, empty: false, zero: true},
+		{name: "zero", input: "0", ok: true, empty: false, zero: true},
+		{name: "more zeroes", input: "000", ok: true, empty: false, zero: true},
+		{name: "frac zeroes", input: "000.000", ok: true, empty: false, zero: true},
+		{name: "one", input: "1", ok: true, empty: false, zero: false, positive: true, intNZ: "1", intLen: 1},
+		{name: "nine", input: "9", ok: true, empty: false, zero: false, positive: true, intNZ: "9", intLen: 1},
+		{name: "single int and frac 1", input: "1.9", ok: true, empty: false, zero: false, positive: true, intNZ: "1", intLen: 1, fracLZ: 0, fracNZ: "9"},
+		{name: "single int and frac 2", input: "9.1", ok: true, empty: false, zero: false, positive: true, intNZ: "9", intLen: 1, fracLZ: 0, fracNZ: "1"},
+		{name: "leading zeroes int", input: "00100", ok: true, empty: false, zero: false, positive: true, intNZ: "1", intLen: 3, fracLZ: 0, fracNZ: ""},
+		{name: "all the things", input: "02900.00410", ok: true, empty: false, zero: false, positive: true, intNZ: "29", intLen: 4, fracLZ: 2, fracNZ: "41"},
+		{name: "neagtive things", input: "-02900.00410", ok: true, empty: false, zero: false, positive: false, intNZ: "29", intLen: 4, fracLZ: 2, fracNZ: "41"},
+	}
+
+	enc := (NewBase10Encoder()).(*Base10Encoder)
+	for _, i := range analysisTests {
+		t.Run(i.name, func(t *testing.T) {
+			ok := enc.AnalyzeInput(i.input)
+
+			if i.ok != ok {
+				t.Fatalf("OK expected: %v, got %v\n", i.ok, ok)
+			}
+			if !i.ok {
+				return
+			}
+
+			if i.empty != enc.isEmpty {
+				t.Fatalf("isEmpty expected: %v, got %v\n", i.empty, enc.isEmpty)
+			}
+			if i.empty {
+				return
+			}
+
+			if i.zero != enc.isZero {
+				t.Fatalf("isZero expected: %v, got %v\n", i.zero, enc.isZero)
+			}
+			if i.zero {
+				return
+			}
+
+			if i.positive != enc.isPositive {
+				t.Fatalf("isZero expected: %v, got %v\n", i.positive, enc.isPositive)
+			}
+
+			tempIntNZ := i.input[enc.intNonZeroFrom:enc.intNonZeroTo]
+			if tempIntNZ != i.intNZ {
+				t.Fatalf("int NZ expected: %v, got $v (in %q [%d : %d]\n", i.intNZ, tempIntNZ, enc.intNonZeroFrom, enc.intNonZeroTo)
+			}
+
+			tempIntLen := enc.intEnd - enc.intNonZeroFrom + 1
+			if i.intLen != tempIntLen {
+				t.Fatalf("int length expected: %d, got %d\n", i.intLen, tempIntLen)
+			}
+
+			fracNZ := i.input[enc.fracNonZeroFrom:enc.fracNonZeroTo]
+			if i.fracNZ != fracNZ {
+				t.Fatalf("empty frac NZ expected: %s, got: %s (in %s [%d : %d])", i.fracNZ, fracNZ, i.input, enc.fracNonZeroFrom, enc.fracNonZeroTo)
+			}
+
+			if i.fracLZ != enc.fracLeadingZeroCount {
+				t.Fatalf("frac leadig zero count expected: %d, got%d\n", i.fracLZ, enc.fracLeadingZeroCount)
+			}
+		})
+	}
+}
