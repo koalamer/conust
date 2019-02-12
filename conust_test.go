@@ -249,7 +249,8 @@ func TestAnalysis(t *testing.T) {
 	enc := (NewBase10Encoder()).(*Base10Encoder)
 	for _, i := range analysisTests {
 		t.Run(i.name, func(t *testing.T) {
-			enc.AnalyzeInput(i.input)
+			enc.Encode(i.input)
+			// fmt.Println("Encoded", i.input, "to", out)
 
 			if i.ok != enc.ok {
 				t.Fatalf("OK expected: %v, got %v\n", i.ok, enc.ok)
@@ -278,7 +279,7 @@ func TestAnalysis(t *testing.T) {
 
 			tempIntNZ := i.input[enc.intNonZeroFrom:enc.intNonZeroTo]
 			if tempIntNZ != i.intNZ {
-				t.Fatalf("int NZ expected: %v, got $v (in %q [%d : %d]\n", i.intNZ, tempIntNZ, enc.intNonZeroFrom, enc.intNonZeroTo)
+				t.Fatalf("int NZ expected: %v, got %v (in %q [%d : %d]\n", i.intNZ, tempIntNZ, i.input, enc.intNonZeroFrom, enc.intNonZeroTo)
 			}
 
 			tempIntLen := enc.intEnd - enc.intNonZeroFrom + 1

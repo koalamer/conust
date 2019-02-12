@@ -8,7 +8,7 @@ import (
 
 // Encoder turns numbers or decimal strings to Conust strings
 type Encoder interface {
-	FromString(string) (string, bool)
+	Encode(string) (string, bool)
 	FromInt32(int32) string
 	FromInt64(int64) string
 	FromFloat32(float32) string

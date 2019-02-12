@@ -9,10 +9,10 @@ type base36Encoder struct{}
 
 // NewBase36Encoder returns a Decoder that outputs base(36) Conust strings
 func NewBase36Encoder() Encoder {
-	return base36Encoder{}
+	return &base36Encoder{}
 }
 
-func (e base36Encoder) FromString(s string) (string, bool) {
+func (e base36Encoder) Encode(s string) (string, bool) {
 	// TODO
 	return "", false
 }

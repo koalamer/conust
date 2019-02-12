@@ -1,6 +1,7 @@
 package conust
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -16,6 +17,7 @@ type Base10Encoder struct {
 	fracLeadingZeroCount int
 	fracNonZeroFrom      int
 	fracNonZeroTo        int
+	builder              strings.Builder
 }
 
 // NewBase10Encoder returns an encoder that outputs base(10) Conust strings
@@ -23,10 +25,89 @@ func NewBase10Encoder() Encoder {
 	return &Base10Encoder{}
 }
 
-//FromString turns input number into a base(10) Conust string
-func (e Base10Encoder) FromString(s string) (out string, ok bool) {
-	// TODO
-	return "", false
+//Encode turns input number into a base(10) Conust string
+func (e *Base10Encoder) Encode(s string) (out string, ok bool) {
+	e.AnalyzeInput(s)
+	if !e.ok {
+		return "", false
+	}
+	if e.empty {
+		return "", true
+	}
+	if e.zero {
+		return zeroOutput, true
+	}
+
+	intNonZeroLength := e.intNonZeroTo - e.intNonZeroFrom
+
+	// determine allocation size
+	outLength := 2 + (e.intNonZeroTo - e.intNonZeroFrom) // sign, magnitude, int length
+	if intNonZeroLength == 0 {                           // if int part is empty, that will be a single character of 0
+		outLength++
+	}
+	if e.fracNonZeroTo-e.fracNonZeroFrom > 0 {
+		outLength += (e.fracNonZeroTo - e.fracNonZeroFrom) + 2 // fraction plus separator and leading zero count character
+	}
+	if !e.positive { // will have single char postfix
+		outLength++
+	}
+
+	// build encoded string
+	e.builder.Reset()
+	e.builder.Grow(outLength)
+
+	if e.positive {
+		e.builder.WriteByte(signPositive)
+	} else {
+		e.builder.WriteByte(signNegative)
+	}
+
+	if intNonZeroLength == 0 {
+		if e.positive {
+			e.builder.WriteByte(intToDigit(1))
+			e.builder.WriteByte(digit0)
+		} else {
+			e.builder.WriteByte(flipDigit10(intToDigit(1)))
+			e.builder.WriteByte(flipDigit10(digit0))
+		}
+	} else {
+		if e.positive {
+			e.builder.WriteByte(intToDigit(e.intEnd - e.intNonZeroFrom + 1))
+			for i := e.intNonZeroFrom; i < e.intNonZeroTo; i++ {
+				e.builder.WriteByte(s[i])
+			}
+		} else {
+			e.builder.WriteByte(flipDigit10(intToDigit(e.intEnd - e.intNonZeroFrom + 1)))
+			for i := e.intNonZeroFrom; i < e.intNonZeroTo; i++ {
+				e.builder.WriteByte(flipDigit10(s[i]))
+			}
+		}
+	}
+
+	if e.fracNonZeroTo > e.fracNonZeroFrom {
+		if e.positive {
+			e.builder.WriteByte(positiveIntegerTerminator)
+			e.builder.WriteByte(flipDigit10(intToDigit(e.fracLeadingZeroCount)))
+			for i := e.fracNonZeroFrom; i < e.fracNonZeroTo; i++ {
+				e.builder.WriteByte(s[i])
+			}
+		} else {
+			e.builder.WriteByte(negativeIntegerTerminator)
+			e.builder.WriteByte(intToDigit(e.fracLeadingZeroCount))
+			for i := e.fracNonZeroFrom; i < e.fracNonZeroTo; i++ {
+				e.builder.WriteByte(flipDigit10(s[i]))
+			}
+			e.builder.WriteByte(negativeIntegerTerminator)
+
+		}
+	}
+	out = e.builder.String()
+	ok = true
+	// debug
+	if len(out) != outLength {
+		fmt.Printf("out length miscalculation: text: %s, encoded: %s, length: %d, estimated %d\n", s, out, len(out), outLength)
+	}
+	return
 }
 
 // AnalyzeInput disects identifies useful parts of the input and stores markers internally
