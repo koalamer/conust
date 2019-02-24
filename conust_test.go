@@ -99,6 +99,15 @@ func TestDecimalSeparatorBytes(t *testing.T) {
 	}
 }
 
+func TestBoundaryVariables(t *testing.T) {
+	if LessThanAny >= string(signNegative) {
+		t.Fatal("the LessThanAny string is not smaller than the negative sign marker")
+	}
+	if GreaterThanAny <= string(signPositive) {
+		t.Fatal("the GreaterThanAny string is not greater than the positive sign marker")
+	}
+}
+
 func TestConversionI64(t *testing.T) {
 	int64tests := []struct {
 		name       string

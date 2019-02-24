@@ -17,7 +17,7 @@ func (e base36Encoder) Encode(s string) (string, bool) {
 	return "", false
 }
 
-func (e base36Encoder) AnalyzeInput(s string) {
+func (e base36Encoder) AnalyzeInput() {
 	return
 }
 

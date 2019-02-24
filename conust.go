@@ -13,7 +13,7 @@ type Encoder interface {
 	FromInt64(int64) string
 	FromFloat32(float32) string
 	FromFloat64(float64) string
-	AnalyzeInput(string)
+	AnalyzeInput()
 }
 
 // Decoder turns Conust strings back to numbers or decimal strings
@@ -49,6 +49,12 @@ const plusByte byte = '+'
 const signNegative byte = '4'
 const zeroOutput = "5"
 const signPositive byte = '6'
+
+// LessThanAny is a string which is less than any encoded value
+const LessThanAny = "3"
+
+// GreaterThanAny is a string which is greater than any encoded value
+const GreaterThanAny = "7"
 
 const builderInitialCap = 7
 
