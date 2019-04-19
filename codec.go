@@ -1,11 +1,9 @@
 package conust
 
 import (
-	"fmt"
 	"strings"
 )
 
-// codec is the base 10 variant of the encoder
 type codec struct {
 	// internal analysis subject
 	input string
@@ -33,7 +31,7 @@ func NewCodec() Codec {
 	return &codec{}
 }
 
-//Encode turns input number into a base(10) Conust string
+//Encode turns the input into the alphanumerically sortable Conust string
 func (c *codec) Encode(s string) (out string, ok bool) {
 	c.input = s
 	c.AnalyzeInput()
@@ -109,12 +107,11 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 			for i := c.fracNonZeroFrom; i < c.fracNonZeroTo; i++ {
 				c.builder.WriteByte(flipDigit(s[i]))
 			}
-			c.builder.WriteByte(negativeIntegerTerminator)
 		}
-	} else {
-		if !c.positive {
-			c.builder.WriteByte(negativeIntegerTerminator)
-		}
+	}
+	if !c.positive {
+		// integers and fractionals both need the negative terminator
+		c.builder.WriteByte(negativeIntegerTerminator)
 	}
 	out = c.builder.String()
 	ok = true
@@ -122,7 +119,7 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 	return
 }
 
-// Decode turns a Conust string back into its sourceBase representation
+// Decode turns a Conust string back into its normal representation
 func (c *codec) Decode(s string) (out string, ok bool) {
 	c.input = s
 	c.AnalyzeToken(s)
@@ -194,14 +191,11 @@ func (c *codec) Decode(s string) (out string, ok bool) {
 
 	out = c.builder.String()
 	ok = true
-	// TODO: remove debug
-	if len(out) != outLength {
-		fmt.Printf("out length miscalculation: encoded: %s, text: %s, length: %d, estimated %d\n", s, out, len(out), outLength)
-	}
 	c.input = ""
 	return
 }
 
+// AnalyzeToken produces the correct internal state for the decoding step
 func (c *codec) AnalyzeToken(s string) {
 	/* defer func() {
 		fmt.Printf("Token: %q, ok: %v, empty: %-5v, zero: %-5v, positive: %-5v\n", s, ok, c.isEmpty, c.isZero, c.isPositive)
@@ -259,7 +253,7 @@ func (c *codec) AnalyzeToken(s string) {
 	c.fracNonZeroTo = c.length
 }
 
-// AnalyzeInput disects identifies useful parts of the input and stores markers internally
+// AnalyzeInput produces the correct internal state for the encoding step
 func (c *codec) AnalyzeInput() {
 	/* defer func() {
 		fmt.Printf("Input: %q, ok: %v, empty: %-5v, zero: %-5v, positive: %-5v\n", s, ok, c.isEmpty, c.isZero, c.isPositive)
@@ -370,6 +364,10 @@ func (c *codec) getIntPartBounds() (ok bool) {
 	c.intNonZeroTo = c.cursor - trailingZeroCount
 	c.intTo = c.cursor
 
+	if c.intTo-c.intNonZeroFrom > maxDigitValue {
+		return false
+	}
+
 	if c.intNonZeroFrom < c.intTo {
 		c.zero = false
 	}
@@ -393,6 +391,9 @@ func (c *codec) getFractionPartBounds() (ok bool) {
 	c.zero = false
 
 	c.fracLeadingZeroCount = c.cursor - fractionFrom
+	if c.fracLeadingZeroCount > maxDigitValue {
+		return false
+	}
 	c.fracNonZeroFrom = c.cursor
 	trailingZeroCount := 0
 	for ; c.cursorValid(); c.cursor++ {
