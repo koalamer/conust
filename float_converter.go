@@ -105,6 +105,8 @@ func (fc *FloatConverter) FormatFloat(input float64) string {
 	return fc.builder.String()
 }
 
+// TODO a string -> string conversion that rounds to decDecimals digits
+
 // ParseFloat converts a numeric string to a floa64 number
 func (fc *FloatConverter) ParseFloat(input string) (out float64, ok bool) {
 	isPositive := true

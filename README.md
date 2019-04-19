@@ -1,27 +1,61 @@
 # CONUST
 
-TODO: make string conversion the default and examine string before building, fractionals, doc, benchmark optimisation, ports
+A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation. It is meant to be used when text tokens and numbers are stored both as strings and you need proper sorting on them.
 
-A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation.
+The input for the encoding must be a numeric string. It need not be integer, floating point numbers are accepted as well. The input can be in a base bewtween 2 and 36. If the input has a base higher than 10, and contains letters, those must be lower cased.
 
-The there are two format options for the transformed strings, one uses the decimal (base(10)) representation of the number as its basis, the other the base(36) representation. The encoded values can hold numbers with up to 35 integral and 35 fractional base converted digits, which should be way more than necessary for everyday applications.
+The encoded version might be 2 to 4 characters longer than the original, but on the other hand the transformation tries to save some space by ommitting the trailing zeros of the integral part of the number, and the leading zeros of the fractional part.
+In case your numbers are such that they cannot benefit from this optimization, you might want to convert your numbers to a higher base before encoding, to make them shorter. There is a FloatConverter included in this library to help you with that, if you want to convert floating point numbers. For integers there is the strconv.FormatInt function to help you.
 
-Trailing zeros of the integral part are encoded in one byte, and the leading zeros of the fractional part are encoded similarly. This means, that if your numbers typically contain lots of zeros, you probably should use the base(10) variant. If, however, your numbers are of arbitrary value, you might be able to save some space by using the base(36) variant as it is a more compact representation.
+The way the numbers are transformed imposes limitations on what can be converted: the integral part of the number cannot be more than 35 digits long, and the fractional part cannot have more than 35 leading zeros. This still allows insanely large numbers, so it shouldn't be a problem.
+
+## FloatConverter
+
+The bundled FloatConverter is able to base convert float64 numbers. Integers are no problem, but fractional numbers might be represented in another base with a long (or even endless) series of fractional digits. For this reason you can specify what precision the converted value should retain. The default is to keep enough fractional digits in the new base to ensure the precision equivalent of 3 decimal digits (0.001 precision)
+
+## Conust for other languages
+
+Currently there is only this Go version, but the converted format is simple to implement. See the next section if you would like to give it a try. (I might do ports myself later.)
 
 ## Encoded Format Description
 
+Encoding (or decoding) an empty string results in an epmty string.
+
+All leading and trailing zeros are ignored on the input.
+
 The zero value is transformed to simply the zero character ("5").
 
-The first character of the output will be "6" for positive numbers, and "4" for negative numbers.
+If the value is not zero, the first character of the output will be "6" for positive numbers, and "4" for negative numbers. This way the first character is always a number, which in the case of alphabetic ordering means that they will be sorted where numbers are normally sorted too. The rest of the encoding depends on the sign:
 
-The length of the number is encoded in a base(36) digit followed by the number itself, omitting the trailing zeros.
+**For positive numbers**, after the sign digit ("6"):
 
-In case of a negative numbers, all digits are swapped for their corresponding pair counting from the end of the digi alphabet. E.g. in base(10) a "2" becomes "7" and vice versa, in base(36) "1" becomes "y" and vice versa.
-Furthermore, a "~" (tilde) is appended to the output for negative numbers, even integers.
+The length of the integer part of the number is encoded in a single base(36) digit. This is followed by the integer itself, but without its trailing zeros. If the integer part is 0, then that one 0 IS present and the length is encoded as being 1.
 
-The fractional part is separated from the integral part by "." (period) in case of positive numbers, and by a "~" (tilde) for negative numbers.
-When encoding fractional numbers, you have to define the number of fractional digits to keep. The fractional input value will be rounded accordingly before processing.
+The fractional part is separated from the integral part by "." (period).
 
-If the number has a non zero fractional part, the output continues with the decimal separator character approppriate for the sign of the number (which is "." for positive and "~" for negative numbers).
-The output will contain the number of leading zero digits of the fractional part in its new base encoded in a single digit.
-Finally the remainig digits of the fractional part are output.
+The number of leading zeros of the fractional part (say X) is encoded in a single base(36) digit, but instead of X itself, 35 - X is used.
+
+Then the fractioal digits following the trailing zeros are output.
+
+**For negative numbers**, after the sign digit ("4"):
+
+The technique is the same, but
+
+- all digits are "reversed", meaning that instead of digit X you'll get digit 35 - X,
+- instead of the decimal point you'll have a "~" (tilde) character,
+- at the end of the output an extra "~" is added
+
+## Conversion Examples
+
+You can find conversion test data in the test files, but to showcase a few scenarios:
+
+| input | encoded version |
+|---|---|
+| 0, +0, -0, 000, 0.0 | 5 |
+| 12 | 6212 |
+| 1200 | 6412 |
+| -200 | 4wx |
+| 0.01 | 610.y1 |
+| -0.01 | 4yz~yy~ |
+| fcd200 | 66fcd2 |
+| -5h32m.002d | 4uuiwxd~xxm~ |
