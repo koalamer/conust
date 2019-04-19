@@ -15,17 +15,20 @@
 // You can make your numbers more compact by converting them to base 36. If you want to convert
 // floating point numbers, you can use the FloatConverter of this package. For integers, there is
 // the built in strconv.FormatInt function.
-
 package conust
 
 // [48 49 50 51 52 53 54 55 56 57 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122]
-var digits36 = [...]byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
-	'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+var digits36 = [...]byte{
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+	'u', 'v', 'w', 'x', 'y', 'z'}
 
-var digits36Reversed = [...]byte{'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q',
-	'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g', 'f', 'e', 'd', 'c', 'b', 'a',
-	'9', '8', '7', '6', '5', '4', '3', '2', '1', '0'}
+var digits36Reversed = [...]byte{
+	'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q',
+	'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g',
+	'f', 'e', 'd', 'c', 'b', 'a', '9', '8', '7', '6',
+	'5', '4', '3', '2', '1', '0'}
 
 const maxDigitValue = 35
 

@@ -116,6 +116,12 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 	out = c.builder.String()
 	ok = true
 	c.input = ""
+
+	// TODO remove debug
+	if outLength != len(out) {
+		panic("outLength error")
+	}
+
 	return
 }
 
@@ -141,12 +147,9 @@ func (c *codec) Decode(s string) (out string, ok bool) {
 	if !c.positive {
 		outLength++
 	}
-	if c.fracNonZeroTo > c.fracNonZeroFrom {
-		outLength += c.fracLeadingZeroCount
-	}
 	hasFraction := c.fracNonZeroTo > c.fracNonZeroFrom
 	if hasFraction {
-		outLength += 1 + c.fracNonZeroTo - c.fracNonZeroFrom
+		outLength += 1 + c.fracLeadingZeroCount + c.fracNonZeroTo - c.fracNonZeroFrom
 	}
 
 	c.builder.Reset()
@@ -170,11 +173,7 @@ func (c *codec) Decode(s string) (out string, ok bool) {
 	}
 
 	if hasFraction {
-		if c.positive {
-			c.builder.WriteByte(positiveIntegerTerminator)
-		} else {
-			c.builder.WriteByte(negativeIntegerTerminator)
-		}
+		c.builder.WriteByte(positiveIntegerTerminator)
 		for i := 0; i < c.fracLeadingZeroCount; i++ {
 			c.builder.WriteByte(digit0)
 		}
@@ -192,6 +191,12 @@ func (c *codec) Decode(s string) (out string, ok bool) {
 	out = c.builder.String()
 	ok = true
 	c.input = ""
+
+	// TODO remove debug
+	if outLength != len(out) {
+		panic("outLength error")
+	}
+
 	return
 }
 
@@ -207,7 +212,7 @@ func (c *codec) AnalyzeToken(s string) {
 	c.length = len(c.input)
 
 	c.ok = true
-	if !c.cursorValid() {
+	if c.length == 0 {
 		c.empty = true
 		return
 	}
@@ -218,6 +223,11 @@ func (c *codec) AnalyzeToken(s string) {
 		return
 	}
 	c.zero = false
+
+	if c.length < 3 {
+		c.ok = false
+		return
+	}
 
 	c.checkTokenSign()
 	var intTerminator byte
@@ -244,13 +254,25 @@ func (c *codec) AnalyzeToken(s string) {
 	}
 	c.intNonZeroTo = terminatorPos
 
+	if terminatorPos == c.length-1 {
+		// terminator is not followed by fractional part
+		return
+	}
+
+	if terminatorPos+2 >= c.length {
+		// fractional part is too short to be valid
+		c.ok = false
+		return
+	}
+
+	c.fracNonZeroFrom = terminatorPos + 2
 	if c.positive {
 		c.fracLeadingZeroCount = reversedDigitToInt(c.input[terminatorPos+1])
+		c.fracNonZeroTo = c.length
 	} else {
 		c.fracLeadingZeroCount = digitToInt(c.input[terminatorPos+1])
+		c.fracNonZeroTo = c.length - 1
 	}
-	c.fracNonZeroFrom = terminatorPos + 2
-	c.fracNonZeroTo = c.length
 }
 
 // AnalyzeInput produces the correct internal state for the encoding step
