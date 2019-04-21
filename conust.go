@@ -33,6 +33,7 @@ var digits36Reversed = [...]byte{
 const maxDigitValue = 35
 
 const digit0 byte = '0'
+const digit1 byte = '1'
 const digit9 byte = '9'
 const digitA byte = 'a'
 const digitZ byte = 'z'
@@ -56,7 +57,9 @@ const negativeIntegerTerminator byte = '~'
 
 // Codec can transform strings to and from the Conust format
 type Codec interface {
+	//Encode turns the input into the alphanumerically sortable Conust string
 	Encode(in string) (out string, ok bool)
+	// Decode turns a Conust string back into its normal representation
 	Decode(in string) (out string, ok bool)
 }
 

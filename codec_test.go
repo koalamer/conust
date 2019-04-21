@@ -221,6 +221,8 @@ func TestCodec(t *testing.T) {
 		{name: "all digits", input: "1234567890abcdefghij.klmnopqrstuvwxyz", encoded: "6k1234567890abcdefghij.zklmnopqrstuvwxyz", decoded: "1234567890abcdefghij.klmnopqrstuvwxyz"},
 		{name: "negative all digits", input: "-1234567890abcdefghij.klmnopqrstuvwxyz", encoded: "4fyxwvutsrqzponmlkjihg~0fedcba9876543210~", decoded: "-1234567890abcdefghij.klmnopqrstuvwxyz"},
 
+		{name: "holes in the middle", input: "005f002k00.0i0k0", encoded: "685f002k.yi0k", decoded: "5f002k00.0i0k"},
+
 		{name: "one", input: "1", encoded: "611", decoded: "1"},
 		{name: "ugly one", input: "+00001", encoded: "611", decoded: "1"},
 		{name: "negative one", input: "-1", encoded: "4yy~", decoded: "-1"},
