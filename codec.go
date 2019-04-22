@@ -1,6 +1,7 @@
 package conust
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -57,11 +58,12 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 	}
 	if c.fracNonZeroTo-c.fracNonZeroFrom > 0 {
 		outLength += 2 + (c.fracNonZeroTo - c.fracNonZeroFrom) // fraction plus separator and leading zero count character
+		if !c.positive {                                       // will have single char postfix
+			outLength++
+		}
+	} else if !c.positive {
+		outLength += 2
 	}
-	if !c.positive { // will have single char postfix
-		outLength++
-	}
-
 	// build encoded string
 	c.builder.Reset()
 	c.builder.Grow(outLength)
@@ -108,6 +110,8 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 				c.builder.WriteByte(flipDigit(s[i]))
 			}
 		}
+	} else if !c.positive {
+		c.builder.WriteByte(negativeIntegerTerminator)
 	}
 	if !c.positive {
 		// integers and fractionals both need the negative terminator
@@ -119,7 +123,7 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 
 	// TODO remove debug
 	if outLength != len(out) {
-		panic("outLength error")
+		panic(fmt.Sprintf("outLength error: for %v -> %v expected %d, got %d", s, out, outLength, len(out)))
 	}
 
 	return
@@ -254,7 +258,8 @@ func (c *codec) AnalyzeToken(s string) {
 	}
 	c.intNonZeroTo = terminatorPos
 
-	if terminatorPos == c.length-1 {
+	if (c.positive && terminatorPos == c.length-1) ||
+		(!c.positive && terminatorPos == c.length-2) {
 		// terminator is not followed by fractional part
 		return
 	}

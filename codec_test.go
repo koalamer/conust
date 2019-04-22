@@ -1,6 +1,7 @@
 package conust
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -134,8 +135,8 @@ func TestDecodingAnalysis(t *testing.T) {
 		{name: "one", input: "611", ok: true, empty: false, zero: false, positive: true, intLen: 1, intNZ: "1", output: "1"},
 		{name: "zf", input: "62zf", ok: true, empty: false, zero: false, positive: true, intLen: 2, intNZ: "zf", output: "zf"},
 		{name: "trimmed", input: "6666", ok: true, empty: false, zero: false, positive: true, intLen: 6, intNZ: "66", output: "660000"},
-		{name: "negative one", input: "4yy~", ok: true, empty: false, zero: false, positive: false, intLen: 1, intNZ: "y", output: "-1"},
-		{name: "negative trimmed", input: "4ttt~", ok: true, empty: false, zero: false, positive: false, intLen: 6, intNZ: "tt", output: "-660000"},
+		{name: "negative one", input: "4yy~~", ok: true, empty: false, zero: false, positive: false, intLen: 1, intNZ: "y", output: "-1"},
+		{name: "negative trimmed", input: "4ttt~~", ok: true, empty: false, zero: false, positive: false, intLen: 6, intNZ: "tt", output: "-660000"},
 
 		{name: "fractional", input: "611.z9", ok: true, empty: false, zero: false, positive: true, intLen: 1, intNZ: "1", fracLZ: 0, fracNZ: "9", output: "1.9"},
 		{name: "fractional 2", input: "6429.x41", ok: true, empty: false, zero: false, positive: true, intLen: 4, intNZ: "29", fracLZ: 2, fracNZ: "41", output: "2900.0041"},
@@ -225,10 +226,10 @@ func TestCodec(t *testing.T) {
 
 		{name: "one", input: "1", encoded: "611", decoded: "1"},
 		{name: "ugly one", input: "+00001", encoded: "611", decoded: "1"},
-		{name: "negative one", input: "-1", encoded: "4yy~", decoded: "-1"},
-		{name: "ugly negative one", input: "-000001", encoded: "4yy~", decoded: "-1"},
+		{name: "negative one", input: "-1", encoded: "4yy~~", decoded: "-1"},
+		{name: "ugly negative one", input: "-000001", encoded: "4yy~~", decoded: "-1"},
 		{name: "ugly positive int", input: "+00000123000", encoded: "66123", decoded: "123000"},
-		{name: "ugly negative int", input: "-00000123000", encoded: "4tyxw~", decoded: "-123000"},
+		{name: "ugly negative int", input: "-00000123000", encoded: "4tyxw~~", decoded: "-123000"},
 		{name: "fractional", input: "54321.12345", encoded: "6554321.z12345", decoded: "54321.12345"},
 		{name: "negative fractional", input: "-54321.12345", encoded: "4uuvwxy~0yxwvu~", decoded: "-54321.12345"},
 		{name: "ugly fractional", input: "+00054321000.00012345000", encoded: "6854321.w12345", decoded: "54321000.00012345"},
@@ -254,4 +255,22 @@ func TestCodec(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSortedness(t *testing.T) {
+	step := 0.01
+	prev := LessThanAny
+	c := NewCodec()
+	for i := -1111.0; i <= 1111.0; i++ {
+		str := fmt.Sprintf("%3f", i*step)
+		encoded, ok := c.Encode(str)
+		if !ok {
+			t.Fatal("Encoding failed for", i)
+		}
+		if prev >= encoded {
+			t.Fatal("at", i*step, " ", prev, "is not smaller than", encoded)
+		}
+		prev = encoded
+	}
+
 }

@@ -43,7 +43,7 @@ The technique is the same, but
 
 - all digits are "reversed", meaning that instead of digit X you'll get digit 35 - X,
 - instead of the decimal point you'll have a "~" (tilde) character,
-- at the end of the output an extra "~" is added
+- at the end of the output an extra "~" is added, if it is an integer it ends with two "~" characters.
 
 ## Conversion Examples
 
@@ -54,7 +54,7 @@ You can find conversion test data in the test files, but to showcase a few scena
 | 0, +0, -0, 000, 0.0 | 5 |
 | 12 | 6212 |
 | 1200 | 6412 |
-| -200 | 4wx |
+| -200 | 4wx~~ |
 | 0.01 | 610.y1 |
 | -0.01 | 4yz~yy~ |
 | fcd200 | 66fcd2 |
