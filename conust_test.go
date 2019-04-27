@@ -52,11 +52,17 @@ func TestArraySortedness(t *testing.T) {
 }
 
 func TestSignBytes(t *testing.T) {
-	if string(signNegative) >= zeroOutput {
-		t.Fatal("signNegative is not smaller than zeroOutput")
+	if string(signNegativeMagPositive) >= string(signNegativeMagNegative) {
+		t.Fatal("signNegativeMagPositive is not smaller than signNegativeMagNegative")
 	}
-	if string(signPositive) <= zeroOutput {
-		t.Fatal("signPositive is not bigger than zeroOutput")
+	if string(signNegativeMagNegative) >= zeroOutput {
+		t.Fatal("signNegativeMagNegative is not smaller than zeroOutput")
+	}
+	if zeroOutput >= string(signPositiveMagNegative) {
+		t.Fatal("zeroOutput is not smaller than signPositiveMagNegative")
+	}
+	if string(signPositiveMagNegative) >= string(signPositiveMagPositive) {
+		t.Fatal("signPositiveMagNegative is not smaller than signPositiveMagPositive")
 	}
 }
 
@@ -75,20 +81,26 @@ func TestNamedBytes(t *testing.T) {
 	}
 }
 
-func TestDecimalSeparatorBytes(t *testing.T) {
-	if positiveIntegerTerminator >= digits36[0] {
-		t.Fatal("the positive decimal separator is not smaller than the digits")
-	}
+func TestTerminatorByte(t *testing.T) {
 	if negativeIntegerTerminator <= digits36[35] {
 		t.Fatal("the negative decimal separator is not greater than the digits")
 	}
 }
 
 func TestBoundaryVariables(t *testing.T) {
-	if LessThanAny >= string(signNegative) {
+	if LessThanAny >= string(signNegativeMagPositive) {
 		t.Fatal("the LessThanAny string is not smaller than the negative sign marker")
 	}
-	if GreaterThanAny <= string(signPositive) {
+	if GreaterThanAny <= string(signPositiveMagPositive) {
 		t.Fatal("the GreaterThanAny string is not greater than the positive sign marker")
+	}
+}
+
+func TestDigitValueLimits(t *testing.T) {
+	if len(digits36)-1 != maxDigitValue {
+		t.Fatal("maxDigitValue is not in sync with the digit dictionary size")
+	}
+	if maxDigitValue-1 != maxMagnitudeDigitValue {
+		t.Fatal("maxMagnitudeDigitValue is not in sync with maxDigitValue")
 	}
 }

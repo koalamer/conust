@@ -88,7 +88,7 @@ func (fc *floatConverter) FormatFloat(input float64) string {
 
 	if fracPart != 0 {
 		lastDigitOverflows := false
-		fc.buffer[cursor] = positiveIntegerTerminator
+		fc.buffer[cursor] = decimalPoint
 		cursor++
 		fracPartStart := cursor
 
@@ -161,7 +161,7 @@ func (fc *floatConverter) ParseFloat(input string) (out float64, ok bool) {
 
 	for ; cursor < length; cursor++ {
 		c := input[cursor]
-		if c == positiveIntegerTerminator {
+		if c == decimalPoint {
 			cursor++
 			break
 		}
@@ -205,7 +205,7 @@ func (fc *floatConverter) applyOverflow(start int, end int) (newStart int, newEn
 		switch fc.buffer[i] {
 		case maxDigit:
 			newEnd = i
-		case positiveIntegerTerminator:
+		case decimalPoint:
 			newEnd = i
 			i = -1 // aka stop the for loop
 		default:

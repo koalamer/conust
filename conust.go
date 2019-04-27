@@ -31,6 +31,7 @@ var digits36Reversed = [...]byte{
 	'5', '4', '3', '2', '1', '0'}
 
 const maxDigitValue = 35
+const maxMagnitudeDigitValue = 34
 
 const digit0 byte = '0'
 const digit1 byte = '1'
@@ -40,19 +41,21 @@ const digitZ byte = 'z'
 const minusByte byte = '-'
 const plusByte byte = '+'
 
-const signNegative byte = '4'
+const signNegativeMagPositive byte = '3'
+const signNegativeMagNegative byte = '4'
 const zeroOutput = "5"
-const signPositive byte = '6'
+const signPositiveMagNegative byte = '6'
+const signPositiveMagPositive byte = '7'
 
 // LessThanAny is a string which is less than any encoded value
-const LessThanAny = "3"
+const LessThanAny = "2"
 
 // GreaterThanAny is a string which is greater than any encoded value
-const GreaterThanAny = "7"
+const GreaterThanAny = "8"
 
 const zeroInput = "0"
 
-const positiveIntegerTerminator byte = '.'
+const decimalPoint = '.'
 const negativeIntegerTerminator byte = '~'
 
 // Codec can transform strings to and from the Conust format
@@ -61,6 +64,11 @@ type Codec interface {
 	Encode(in string) (out string, ok bool)
 	// Decode turns a Conust string back into its normal representation
 	Decode(in string) (out string, ok bool)
+}
+
+func isDigit(digit byte) bool {
+	return (digit >= digit0 && digit <= digit9) ||
+		(digit >= digitA && digit <= digitZ)
 }
 
 func digitToInt(digit byte) int {
@@ -77,14 +85,14 @@ func reversedDigitToInt(digit byte) int {
 	return int(digitZ - digit)
 }
 
-func flipDigit(digit byte) byte {
-	return intToReversedDigit(digitToInt(digit))
+func intToDigit(i int) byte {
+	return digits36[i]
 }
 
 func intToReversedDigit(i int) byte {
 	return digits36Reversed[i]
 }
 
-func intToDigit(i int) byte {
-	return digits36[i]
+func flipDigit(digit byte) byte {
+	return intToReversedDigit(digitToInt(digit))
 }
