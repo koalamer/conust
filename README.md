@@ -4,14 +4,7 @@ A utility to transform numbers into alphabetically sortable strings with the abi
 
 The input for the encoding must be a numeric string. It need not be integer, floating point numbers are accepted as well. The input can be in a base bewtween 2 and 36. If the input has a base higher than 10, and contains letters, those must be lower cased.
 
-The encoded version might be 2 to 4 characters longer than the original, but on the other hand the transformation tries to save some space by ommitting the trailing zeros of the integral part of the number, and the leading zeros of the fractional part.
-In case your numbers are such that they cannot benefit from this optimization, you might want to convert your numbers to a higher base before encoding, to make them shorter. There is a FloatConverter included in this library to help you with that, if you want to convert floating point numbers. For integers there is the strconv.FormatInt function to help you.
-
-The way the numbers are transformed imposes limitations on what can be converted: the integral part of the number cannot be more than 35 digits long, and the fractional part cannot have more than 35 leading zeros. This still allows insanely large numbers, so it shouldn't be a problem.
-
-## FloatConverter
-
-The bundled FloatConverter is able to base convert float64 numbers. Integers are no problem, but fractional numbers might be represented in another base with a long (or even endless) series of fractional digits. For this reason you can specify what precision the converted value should retain. The default is to keep enough fractional digits in the new base to ensure the precision equivalent of 3 decimal digits (0.001 precision)
+The encoded version might be a few characters longer than the original, but on the other hand the transformation only keeps the significant section of the number, removing all trailing and heading zeros.
 
 ## Conust for other languages
 
@@ -19,31 +12,37 @@ Currently there is only this Go version, but the converted format is simple to i
 
 ## Encoded Format Description
 
-Encoding (or decoding) an empty string results in an epmty string.
+Encoding an empty string results in an epmty string.
 
-All leading and trailing zeros are ignored on the input.
+For non empty input all trailing and heading zeros are ignored, and the first digit of the encoded number X will be:
 
-The zero value is transformed to simply the zero character ("5").
+- "7" if X >= 1 
+- "6" if 1 > X > 0
+- "5" if X = 0, and threre are no more characters in this case
+- "4" if 0 > X > -1
+- "3" if -1 >= X 
 
-If the value is not zero, the first character of the output will be "6" for positive numbers, and "4" for negative numbers. This way the first character is always a number, which in the case of alphabetic ordering means that they will be sorted where numbers are normally sorted too. The rest of the encoding depends on the sign:
+This is followed by the exponential of the significant part of the number, which can occupy more than one digit. The value of the exponent is
 
-**For positive numbers**, after the sign digit ("6"):
+- if X >= 1  or X <= -1, the number of integer digits
+- if X < 1 and X > -1 but X != 0, then the number of leading zeros after the decimal point is stored
 
-The length of the integer part of the number is encoded in a single base(36) digit. This is followed by the integer itself, but without its trailing zeros. If the integer part is 0, then that one 0 IS present and the length is encoded as being 1.
+The value of the exponent (E) is stored in a series of digits, each adding a maximum of 34 to the overall value of the exponent:
 
-The fractional part is separated from the integral part by "." (period).
+- if 0 <= E < 34 this value is stored in one digit
+- if E > 34, then a digit vith the value of 35 is stored, and the encoding is repeated for E = E - 34
 
-The number of leading zeros of the fractional part (say X) is encoded in a single base(36) digit, but instead of X itself, 35 - X is used.
+For numbers with the sign digits
 
-Then the fractioal digits following the trailing zeros are output.
+- "7" or "4" the exponent digits are normal base 36 digits.
+- "6" and "3" the digits are value reversed: instead of X there will be the digit 35 - X
 
-**For negative numbers**, after the sign digit ("4"):
+After the exponential come the significant digits of the original number, omitting the decimal point is there is any. The digits are treated as base 36 digits and are encoded
 
-The technique is the same, but
+- normally if the number is positive, which basically means thet the digits are copied from the input
+- value reversed, meaning that  instead of a digit X, the digit 35 - X is stored
 
-- all digits are "reversed", meaning that instead of digit X you'll get digit 35 - X,
-- instead of the decimal point you'll have a "~" (tilde) character,
-- at the end of the output an extra "~" is added, if it is an integer it ends with two "~" characters.
+Finally if the number is negative it is terminated by a "~" (tilde) character
 
 ## Conversion Examples
 
@@ -51,11 +50,18 @@ You can find conversion test data in the test files, but to showcase a few scena
 
 | input | encoded version |
 |---|---|
-| 0, +0, -0, 000, 0.0 | 5 |
-| 12 | 6212 |
-| 1200 | 6412 |
-| -200 | 4wx~~ |
-| 0.01 | 610.y1 |
-| -0.01 | 4yz~yy~ |
-| fcd200 | 66fcd2 |
-| -5h32m.002d | 4uuiwxd~xxm~ |
+| 12000000000000000000000000000000000000 | 7z412 |
+| 1200 |7412 |
+| 12 |7212 |
+| 1.2 |7112 |
+| 0.12 |6z12 |
+| 0.0012 |6x12 |
+| 0.0000000000000000000000000000000000012 | 60y12 |
+| 0 | 5 |
+| -0.0000000000000000000000000000000000012 | 4z1yx~ |
+| -0.0012 | 42yx~ |
+| -0.12 | 40yx~ |
+| -1.2 | 3yyx~ |
+| -12 | 3xyx~ |
+| -1200 | 3vyx~ |
+| -12000000000000000000000000000000000000 | 30vyx~ |

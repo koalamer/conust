@@ -82,7 +82,7 @@ func TestNamedBytes(t *testing.T) {
 }
 
 func TestTerminatorByte(t *testing.T) {
-	if negativeIntegerTerminator <= digits36[35] {
+	if negativeNumberTerminator <= digits36[35] {
 		t.Fatal("the negative decimal separator is not greater than the digits")
 	}
 }

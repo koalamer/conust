@@ -140,7 +140,7 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 				c.builder.WriteByte(flipDigit(c.input[i]))
 			}
 			// negative terminator
-			c.builder.WriteByte(negativeIntegerTerminator)
+			c.builder.WriteByte(negativeNumberTerminator)
 		}
 	} else {
 		if c.positive {
@@ -154,7 +154,7 @@ func (c *codec) Encode(s string) (out string, ok bool) {
 				c.builder.WriteByte(flipDigit(c.input[i]))
 			}
 			// negative terminator
-			c.builder.WriteByte(negativeIntegerTerminator)
+			c.builder.WriteByte(negativeNumberTerminator)
 		}
 	}
 	out = c.builder.String()
@@ -351,7 +351,7 @@ func (c *codec) AnalyzeToken(s string) {
 
 	c.decodeSign(c.input[0])
 	if !c.positive {
-		if c.input[c.length-1] != negativeIntegerTerminator {
+		if c.input[c.length-1] != negativeNumberTerminator {
 			// negative terminator is not at the end as it should be
 			return
 		}
@@ -400,6 +400,54 @@ func (c *codec) AnalyzeToken(s string) {
 	c.fracLeadingZeroCount = c.magnitude
 	c.fracSignificantFrom = c.cursor
 	c.fracSignificantTo = c.length
+}
+
+func (c *codec) EncodeInText(in string) (out string, ok bool) {
+	inNum := false
+	donePart := 0
+	var b strings.Builder
+	ok = true
+	b.Grow(len(in))
+
+	for i := 0; i < len(in); i++ {
+		if in[i] >= digit0 && in[i] <= digit9 {
+			if !inNum {
+				b.Write([]byte(in[donePart:i]))
+				donePart = i
+				inNum = true
+			}
+			continue
+		}
+		if inNum {
+			encoded, encOk := c.Encode(in[donePart:i])
+			if encOk {
+				b.Write([]byte(encoded))
+			} else {
+				b.WriteByte(negativeNumberTerminator)
+				b.Write([]byte(in[donePart:i]))
+				b.WriteByte(negativeNumberTerminator)
+				ok = false
+			}
+			inNum = false
+			donePart = i
+		}
+	}
+	if !inNum {
+		b.Write([]byte(in[donePart:]))
+	} else {
+		encoded, encOk := c.Encode(in[donePart:])
+		if encOk {
+			b.Write([]byte(encoded))
+		} else {
+			b.WriteByte(negativeNumberTerminator)
+			b.Write([]byte(in[donePart:]))
+			b.WriteByte(negativeNumberTerminator)
+			ok = false
+		}
+	}
+
+	out = b.String()
+	return
 }
 
 func (c *codec) cursorCanRead() bool {

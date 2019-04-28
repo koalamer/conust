@@ -267,6 +267,21 @@ func TestCodec(t *testing.T) {
 		{name: "maximum int length", input: "12345678901234567890123456789012345.1", encoded: "7z1123456789012345678901234567890123451", decoded: "12345678901234567890123456789012345.1"},
 		{name: "maximum negative int length", input: "-12345678901234567890123456789012345.1", encoded: "30yyxwvutsrqzyxwvutsrqzyxwvutsrqzyxwvuy~", decoded: "-12345678901234567890123456789012345.1"},
 		{name: "maximum fracleading zero count", input: "0.000000000000000000000000000000000004325430", encoded: "60y432543", decoded: "0.00000000000000000000000000000000000432543"},
+
+		{name: "example 1", input: "12000000000000000000000000000000000000", encoded: "7z412", decoded: "12000000000000000000000000000000000000"},
+		{name: "example 2", input: "1200", encoded: "7412", decoded: "1200"},
+		{name: "example 3", input: "12", encoded: "7212", decoded: "12"},
+		{name: "example 4", input: "1.2", encoded: "7112", decoded: "1.2"},
+		{name: "example 5", input: "0.12", encoded: "6z12", decoded: "0.12"},
+		{name: "example 6", input: "0.0012", encoded: "6x12", decoded: "0.0012"},
+		{name: "example 6.2", input: "0.0000000000000000000000000000000000012", encoded: "60y12", decoded: "0.0000000000000000000000000000000000012"},
+		{name: "example 6.3", input: "-0.0000000000000000000000000000000000012", encoded: "4z1yx~", decoded: "-0.0000000000000000000000000000000000012"},
+		{name: "example 7", input: "-0.0012", encoded: "42yx~", decoded: "-0.0012"},
+		{name: "example 8", input: "-0.12", encoded: "40yx~", decoded: "-0.12"},
+		{name: "example 9", input: "-1.2", encoded: "3yyx~", decoded: "-1.2"},
+		{name: "example 10", input: "-12", encoded: "3xyx~", decoded: "-12"},
+		{name: "example 11", input: "-1200", encoded: "3vyx~", decoded: "-1200"},
+		{name: "example 12", input: "-12000000000000000000000000000000000000", encoded: "30vyx~", decoded: "-12000000000000000000000000000000000000"},
 	}
 	codec := NewCodec()
 	for _, i := range codecTests {
@@ -317,5 +332,40 @@ func BenchmarkEncoding(b *testing.B) {
 		if !ok {
 			b.Fatal("Decoding failed for", encoded, "in", i)
 		}
+	}
+}
+
+func TestEncodeInText(t *testing.T) {
+	testCases := []struct {
+		name   string
+		input  string
+		ok     bool
+		output string
+	}{
+		{name: "empty", input: "", ok: true, output: ""},
+		{name: "no numbers", input: "quick brown fox", ok: true, output: "quick brown fox"},
+		{name: "only numbers", input: "423", ok: true, output: "73423"},
+		{name: "mixed 1", input: "300Z", ok: true, output: "733Z"},
+		{name: "mixed 2", input: "A300Z", ok: true, output: "A733Z"},
+		{name: "mixed 3", input: "A300", ok: true, output: "A733"},
+		{name: "mixed 4", input: "If 2x + 3y = 8 and 4x + 12y = 28, what is x and y?", ok: true, output: "If 712x + 713y = 718 and 714x + 7212y = 7228, what is x and y?"},
+		{name: "mixed c1", input: "Canon EOS D300", ok: true, output: "Canon EOS D733"},
+		{name: "mixed c2", input: "Canon EOS D600", ok: true, output: "Canon EOS D736"},
+		{name: "mixed c3", input: "Canon EOS D1000", ok: true, output: "Canon EOS D741"},
+		{name: "mixed c4", input: "Canon EOS D1100", ok: true, output: "Canon EOS D7411"},
+	}
+	c := NewCodec()
+	for _, i := range testCases {
+		t.Run(i.name, func(t *testing.T) {
+			encoded, ok := c.EncodeInText(i.input)
+
+			if ok != i.ok {
+				t.Fatalf("ok expected %v got %v", i.ok, ok)
+			}
+
+			if encoded != i.output {
+				t.Fatalf("output expected %s got %s", i.output, encoded)
+			}
+		})
 	}
 }
