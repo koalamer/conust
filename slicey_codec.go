@@ -52,7 +52,47 @@ func (sc *sliceyCodec) Decode(in string) (out string, ok bool) {
 }
 
 func (sc *sliceyCodec) EncodeInText(in string) (out string, ok bool) {
-	return "", false
+	inNum := false
+	donePart := 0
+	var b strings.Builder
+	ok = true
+	b.Grow(len(in) + 10)
+
+	for i := 0; i < len(in); i++ {
+		if in[i] >= digit0 && in[i] <= digit9 {
+			if !inNum {
+				b.Write([]byte(in[donePart:i]))
+				donePart = i
+				inNum = true
+			}
+			continue
+		}
+		if inNum {
+			encoded, encOk := sc.Encode(in[donePart:i])
+			if encOk {
+				b.WriteString(encoded)
+			} else {
+				b.WriteString(in[donePart:i])
+				ok = false
+			}
+			inNum = false
+			donePart = i
+		}
+	}
+	if !inNum {
+		b.WriteString(in[donePart:])
+	} else {
+		encoded, encOk := sc.Encode(in[donePart:])
+		if encOk {
+			b.WriteString(encoded)
+		} else {
+			b.WriteString(in[donePart:])
+			ok = false
+		}
+	}
+
+	out = b.String()
+	return
 }
 
 func (sc *sliceyCodec) getPositivity(in string) (positive bool) {

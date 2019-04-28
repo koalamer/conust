@@ -386,7 +386,7 @@ func TestEncodeInText(t *testing.T) {
 		{name: "mixed c3", input: "Canon EOS D1000", ok: true, output: "Canon EOS D741"},
 		{name: "mixed c4", input: "Canon EOS D1100", ok: true, output: "Canon EOS D7411"},
 	}
-	c := NewCodec()
+	c := NewSliceyCodec()
 	for _, i := range testCases {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, ok := c.EncodeInText(i.input)
