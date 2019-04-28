@@ -19,10 +19,10 @@ func (sc *sliceyCodec) Encode(in string) (out string, ok bool) {
 		return "", true
 	}
 
-	positive := sc.checkPositive(in)
-	decimalPointPos := sc.checkDecimalPointPos(in)
-	start := sc.checkStart(in)
-	end := sc.checkEnd(in)
+	positive := sc.getPositivity(in)
+	decimalPointPos := sc.getDecimalPointPosition(in)
+	start := sc.getStartPosition(in)
+	end := sc.getEndPosition(in)
 
 	if start == end {
 		return zeroOutput, true
@@ -33,13 +33,13 @@ func (sc *sliceyCodec) Encode(in string) (out string, ok bool) {
 	sc.builder.Reset()
 	sc.builder.Grow(end - start + 5)
 	sc.builder.WriteByte(sc.encodeSign(positive, magnitudePositive))
-	sc.writeMagnitude(&sc.builder, positive, magnitudePositive, magnitude)
+	sc.writeMagnitude(positive, magnitudePositive, magnitude)
 
 	if start < decimalPointPos && decimalPointPos < end {
-		sc.writeDigits(&sc.builder, positive, in[start:decimalPointPos])
-		sc.writeDigits(&sc.builder, positive, in[decimalPointPos+1:end])
+		sc.writeDigits(positive, in[start:decimalPointPos])
+		sc.writeDigits(positive, in[decimalPointPos+1:end])
 	} else {
-		sc.writeDigits(&sc.builder, positive, in[start:end])
+		sc.writeDigits(positive, in[start:end])
 	}
 	if !positive {
 		sc.builder.WriteByte(negativeNumberTerminator)
@@ -55,41 +55,31 @@ func (sc *sliceyCodec) EncodeInText(in string) (out string, ok bool) {
 	return "", false
 }
 
-func (sc *sliceyCodec) checkPositive(in string) (positive bool) {
+func (sc *sliceyCodec) getPositivity(in string) (positive bool) {
 	return in[0] != minusByte
 }
 
-func (sc *sliceyCodec) checkStart(in string) (start int) {
-	found := false
+func (sc *sliceyCodec) getStartPosition(in string) (start int) {
 	i := 0
 	for ; i < len(in); i++ {
 		if isDigit(in[i]) && in[i] != digit0 {
-			found = true
-			break
+			return i
 		}
 	}
-	if !found {
-		return -1
-	}
-	return i
+	return -1
 }
 
-func (sc *sliceyCodec) checkEnd(in string) (end int) {
-	found := false
+func (sc *sliceyCodec) getEndPosition(in string) (end int) {
 	i := len(in) - 1
 	for ; i >= 0; i-- {
 		if isDigit(in[i]) && in[i] != digit0 {
-			found = true
-			break
+			return i + 1
 		}
 	}
-	if !found {
-		return -1
-	}
-	return i + 1
+	return -1
 }
 
-func (sc *sliceyCodec) checkDecimalPointPos(in string) (decimalPointPos int) {
+func (sc *sliceyCodec) getDecimalPointPosition(in string) (decimalPointPos int) {
 	return strings.IndexByte(in, decimalPoint)
 }
 
@@ -120,11 +110,11 @@ func (sc *sliceyCodec) encodeSign(positive bool, magnitudePositive bool) byte {
 	return signNegativeMagNegative
 }
 
-func (sc *sliceyCodec) writeMagnitude(b *strings.Builder, positive bool, magnitudePositive bool, magnitude int) {
+func (sc *sliceyCodec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
 	for ; magnitude > maxMagnitudeDigitValue; magnitude -= maxMagnitudeDigitValue {
-		b.WriteByte(sc.encodeMagnitude(maxDigitValue, positive, magnitudePositive))
+		sc.builder.WriteByte(sc.encodeMagnitude(maxDigitValue, positive, magnitudePositive))
 	}
-	b.WriteByte(sc.encodeMagnitude(magnitude, positive, magnitudePositive))
+	sc.builder.WriteByte(sc.encodeMagnitude(magnitude, positive, magnitudePositive))
 }
 
 func (sc *sliceyCodec) encodeMagnitude(m int, positive bool, magnitudePositive bool) byte {
@@ -134,14 +124,12 @@ func (sc *sliceyCodec) encodeMagnitude(m int, positive bool, magnitudePositive b
 	return intToReversedDigit(m)
 }
 
-func (sc *sliceyCodec) writeDigits(b *strings.Builder, positive bool, digits string) {
+func (sc *sliceyCodec) writeDigits(positive bool, digits string) {
 	if positive {
-		for i := 0; i < len(digits); i++ {
-			b.WriteByte(digits[i])
-		}
+		sc.builder.WriteString(digits)
 	} else {
 		for i := 0; i < len(digits); i++ {
-			b.WriteByte(flipDigit(digits[i]))
+			sc.builder.WriteByte(flipDigit(digits[i]))
 		}
 
 	}

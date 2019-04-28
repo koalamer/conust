@@ -2,6 +2,7 @@ package conust
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -325,12 +326,12 @@ func TestSortedness(t *testing.T) {
 }
 
 func BenchmarkEncoding(b *testing.B) {
-	step := 0.013
+	step := 0.001
 	c := NewCodec()
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
-		str := fmt.Sprintf("%3f", i*step)
+		str := strconv.FormatFloat(i*step, 'f', -1, 64)
 		// encoded, ok := c.Encode(str)
 		_, ok := c.Encode(str)
 		if !ok {
@@ -346,12 +347,12 @@ func BenchmarkEncoding(b *testing.B) {
 }
 
 func BenchmarkSliceyEncoding(b *testing.B) {
-	step := 0.013
+	step := 0.001
 	c := NewSliceyCodec()
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
-		str := fmt.Sprintf("%3f", i*step)
+		str := strconv.FormatFloat(i*step, 'f', -1, 64)
 		// encoded, ok := c.Encode(str)
 		_, ok := c.Encode(str)
 		if !ok {
