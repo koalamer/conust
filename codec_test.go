@@ -284,12 +284,19 @@ func TestCodec(t *testing.T) {
 		{name: "example 12", input: "-12000000000000000000000000000000000000", encoded: "30vyx~", decoded: "-12000000000000000000000000000000000000"},
 	}
 	codec := NewCodec()
+	slicey := NewSliceyCodec()
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, _ := codec.Encode(i.input)
 
 			if i.encoded != encoded {
 				t.Fatalf("Encoding expected: %v, got %v\n", i.encoded, encoded)
+			}
+
+			encoded, _ = slicey.Encode(i.input)
+
+			if i.encoded != encoded {
+				t.Fatalf("Encoding slicely expected: %v, got %v\n", i.encoded, encoded)
 			}
 
 			decoded, _ := codec.Decode(encoded)
@@ -318,20 +325,44 @@ func TestSortedness(t *testing.T) {
 }
 
 func BenchmarkEncoding(b *testing.B) {
-	step := 0.01
+	step := 0.013
 	c := NewCodec()
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
 		str := fmt.Sprintf("%3f", i*step)
-		encoded, ok := c.Encode(str)
+		// encoded, ok := c.Encode(str)
+		_, ok := c.Encode(str)
 		if !ok {
 			b.Fatal("Encoding failed for", i)
 		}
-		_, ok = c.Decode(encoded)
+		/*
+			_, ok = c.Decode(encoded)
+			if !ok {
+				b.Fatal("Decoding failed for", encoded, "in", i)
+			}
+		*/
+	}
+}
+
+func BenchmarkSliceyEncoding(b *testing.B) {
+	step := 0.013
+	c := NewSliceyCodec()
+	to := float64(b.N / 2)
+	from := -1 * to
+	for i := from; i <= to; i++ {
+		str := fmt.Sprintf("%3f", i*step)
+		// encoded, ok := c.Encode(str)
+		_, ok := c.Encode(str)
 		if !ok {
-			b.Fatal("Decoding failed for", encoded, "in", i)
+			b.Fatal("Encoding failed for", i)
 		}
+		/*
+			_, ok = c.Decode(encoded)
+			if !ok {
+				b.Fatal("Decoding failed for", encoded, "in", i)
+			}
+		*/
 	}
 }
 
