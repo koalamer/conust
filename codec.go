@@ -4,17 +4,17 @@ import (
 	"strings"
 )
 
-type sliceyCodec struct {
+type codec struct {
 	builder strings.Builder
 }
 
-// NewSliceyCodec creates a slicey kind of codec
-func NewSliceyCodec() (out Codec) {
-	out = &sliceyCodec{}
+// NewCodec creates a slicey kind of codec
+func NewCodec() (out Codec) {
+	out = &codec{}
 	return
 }
 
-func (sc *sliceyCodec) Encode(in string) (out string, ok bool) {
+func (sc *codec) Encode(in string) (out string, ok bool) {
 	if in == "" {
 		return "", true
 	}
@@ -47,7 +47,7 @@ func (sc *sliceyCodec) Encode(in string) (out string, ok bool) {
 	return sc.builder.String(), true
 }
 
-func (sc *sliceyCodec) Decode(in string) (out string, ok bool) {
+func (sc *codec) Decode(in string) (out string, ok bool) {
 	if in == "" {
 		return "", true
 	}
@@ -107,7 +107,7 @@ func (sc *sliceyCodec) Decode(in string) (out string, ok bool) {
 	return sc.builder.String(), true
 }
 
-func (sc *sliceyCodec) EncodeInText(in string) (out string, ok bool) {
+func (sc *codec) EncodeInText(in string) (out string, ok bool) {
 	inNum := false
 	donePart := 0
 	var b strings.Builder
@@ -151,11 +151,11 @@ func (sc *sliceyCodec) EncodeInText(in string) (out string, ok bool) {
 	return
 }
 
-func (sc *sliceyCodec) getPositivity(in string) (positive bool) {
+func (sc *codec) getPositivity(in string) (positive bool) {
 	return in[0] != minusByte
 }
 
-func (sc *sliceyCodec) getStartPosition(in string) (start int) {
+func (sc *codec) getStartPosition(in string) (start int) {
 	i := 0
 	for ; i < len(in); i++ {
 		if isDigit(in[i]) && in[i] != digit0 {
@@ -165,7 +165,7 @@ func (sc *sliceyCodec) getStartPosition(in string) (start int) {
 	return -1
 }
 
-func (sc *sliceyCodec) getEndPosition(in string) (end int) {
+func (sc *codec) getEndPosition(in string) (end int) {
 	i := len(in) - 1
 	for ; i >= 0; i-- {
 		if isDigit(in[i]) && in[i] != digit0 {
@@ -175,11 +175,11 @@ func (sc *sliceyCodec) getEndPosition(in string) (end int) {
 	return -1
 }
 
-func (sc *sliceyCodec) getDecimalPointPosition(in string) (decimalPointPos int) {
+func (sc *codec) getDecimalPointPosition(in string) (decimalPointPos int) {
 	return strings.IndexByte(in, decimalPoint)
 }
 
-func (sc *sliceyCodec) checkMagnitudeParams(length int, start int, end int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
+func (sc *codec) checkMagnitudeParams(length int, start int, end int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
 	if decimalPointPos < 0 {
 		magnitude = length - start
 		magnitudePositive = true
@@ -193,7 +193,7 @@ func (sc *sliceyCodec) checkMagnitudeParams(length int, start int, end int, deci
 	return
 }
 
-func (sc *sliceyCodec) calculateEncodedSize(positive bool, magnitude int, start int, end int, decimalPointPos int) (encodedLength int) {
+func (sc *codec) calculateEncodedSize(positive bool, magnitude int, start int, end int, decimalPointPos int) (encodedLength int) {
 	encodedLength = 2 + (magnitude / maxMagnitudeDigitValue) + end - start
 	if !positive {
 		encodedLength++
@@ -204,7 +204,7 @@ func (sc *sliceyCodec) calculateEncodedSize(positive bool, magnitude int, start 
 	return
 }
 
-func (sc *sliceyCodec) encodeSign(positive bool, magnitudePositive bool) byte {
+func (sc *codec) encodeSign(positive bool, magnitudePositive bool) byte {
 	if positive {
 		if magnitudePositive {
 			return signPositiveMagPositive
@@ -217,7 +217,7 @@ func (sc *sliceyCodec) encodeSign(positive bool, magnitudePositive bool) byte {
 	return signNegativeMagNegative
 }
 
-func (sc *sliceyCodec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
+func (sc *codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
 	flippedDigits := positive != magnitudePositive
 	for ; magnitude > maxMagnitudeDigitValue; magnitude -= maxMagnitudeDigitValue {
 		if flippedDigits {
@@ -233,7 +233,7 @@ func (sc *sliceyCodec) writeMagnitude(positive bool, magnitudePositive bool, mag
 	}
 }
 
-func (sc *sliceyCodec) writeDigits(positive bool, digits string) {
+func (sc *codec) writeDigits(positive bool, digits string) {
 	if positive {
 		sc.builder.WriteString(digits)
 	} else {
@@ -244,7 +244,7 @@ func (sc *sliceyCodec) writeDigits(positive bool, digits string) {
 	}
 }
 
-func (sc *sliceyCodec) getEncodedSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
+func (sc *codec) getEncodedSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
 	switch in[0] {
 	case signPositiveMagPositive:
 		return true, true, true
@@ -260,7 +260,7 @@ func (sc *sliceyCodec) getEncodedSigns(in string) (positive bool, magnitudePosit
 }
 
 // magnitude, significantPartPos, ok := sc.getEncodedMagnitude(in)
-func (sc *sliceyCodec) getEncodedMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
+func (sc *codec) getEncodedMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
 	flippedDigits := positive != magnitudePositive
 	var digitValue int
 	for i := 1; i < len(in); i++ {
@@ -282,7 +282,7 @@ func (sc *sliceyCodec) getEncodedMagnitude(in string, positive bool, magnitudePo
 	return 0, 0, false
 }
 
-func (sc *sliceyCodec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) (decodedLength int) {
+func (sc *codec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) (decodedLength int) {
 	if !positive {
 		decodedLength = 1
 	}
