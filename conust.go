@@ -61,7 +61,7 @@ const inTextSeparator byte = ' '
 //
 // It has Encode and Decode functions to transform simple numbers to and from the Conust format.
 //
-// There is also EncodeInText, a convenience function, that encodes each group of decimal numbers
+// There is also EncodeMixedText, a convenience function, that encodes each group of decimal numbers
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
 type Codec interface {
@@ -70,9 +70,9 @@ type Codec interface {
 	Encode(in string) (out string, ok bool)
 	// Decode turns a Conust string back into its normal representation
 	Decode(in string) (out string, ok bool)
-	// EncodeInText is a convinience function that replaces all groups of decimal numbers of the input
-	// with conust strings and returns the resulting string
-	EncodeInText(in string) (out string, ok bool)
+	// EncodeMixedText is a convinience function that replaces all groups of decimal numbers of the input
+	// with conust strings also surrounding them with spaces to ensure the expected ordering
+	EncodeMixedText(in string) (out string, ok bool)
 }
 
 func isDigit(digit byte) bool {
@@ -102,6 +102,6 @@ func intToReversedDigit(i int) byte {
 	return digits36Reversed[i]
 }
 
-func flipDigit(digit byte) byte {
+func reverseDigit(digit byte) byte {
 	return intToReversedDigit(digitToInt(digit))
 }

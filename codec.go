@@ -9,146 +9,144 @@ type codec struct {
 }
 
 // NewCodec creates a new codec instance. These instances are not thread safe.
-func NewCodec() (out Codec) {
-	out = &codec{}
-	return
+func NewCodec() Codec {
+	return &codec{}
 }
 
-func (sc *codec) Encode(in string) (out string, ok bool) {
-	if in == "" {
+func (c *codec) Encode(input string) (out string, ok bool) {
+	if input == "" {
 		return "", true
 	}
 
-	positive := sc.getPositivity(in)
-	decimalPointPos := sc.getDecimalPointPosition(in)
-	start := sc.getStartPosition(in)
-	end := sc.getEndPosition(in)
+	positive := c.getPositivity(input)
+	decimalPointPos := c.getDecimalPointPos(input)
+	sStartPos := c.getSignificantStartPos(input)
+	sEndPos := c.getSignificantEndPos(input)
 
-	if start == end {
+	if sStartPos == sEndPos {
 		return zeroOutput, true
 	}
 
-	magnitude, magnitudePositive := sc.checkMagnitudeParams(len(in), start, end, decimalPointPos)
+	magnitude, magnitudePositive := c.getMagnitudeParams(len(input), sStartPos, sEndPos, decimalPointPos)
 
-	sc.builder.Reset()
-	sc.builder.Grow(sc.calculateEncodedSize(positive, magnitude, start, end, decimalPointPos))
-	sc.builder.WriteByte(sc.encodeSign(positive, magnitudePositive))
-	sc.writeMagnitude(positive, magnitudePositive, magnitude)
+	c.builder.Reset()
+	c.builder.Grow(c.calculateEncodedSize(positive, magnitude, sStartPos, sEndPos, decimalPointPos))
+	c.builder.WriteByte(c.encodeSign(positive, magnitudePositive))
+	c.writeMagnitude(positive, magnitudePositive, magnitude)
 
-	if start < decimalPointPos && decimalPointPos < end {
-		sc.writeDigits(positive, in[start:decimalPointPos])
-		sc.writeDigits(positive, in[decimalPointPos+1:end])
+	if sStartPos < decimalPointPos && decimalPointPos < sEndPos {
+		c.writeDigits(positive, input[sStartPos:decimalPointPos])
+		c.writeDigits(positive, input[decimalPointPos+1:sEndPos])
 	} else {
-		sc.writeDigits(positive, in[start:end])
+		c.writeDigits(positive, input[sStartPos:sEndPos])
 	}
 	if !positive {
-		sc.builder.WriteByte(negativeNumberTerminator)
+		c.builder.WriteByte(negativeNumberTerminator)
 	}
-	return sc.builder.String(), true
+	return c.builder.String(), true
 }
 
-func (sc *codec) Decode(in string) (out string, ok bool) {
-	if in == "" {
+func (c *codec) Decode(input string) (out string, ok bool) {
+	if input == "" {
 		return "", true
 	}
 
-	if in == zeroOutput {
+	if input == zeroOutput {
 		return zeroInput, true
 	}
 
-	if len(in) < 3 {
+	if len(input) < 3 {
 		return "", false
 	}
 
-	positive, magnitudePositive, ok := sc.getEncodedSigns(in)
+	positive, magnitudePositive, ok := c.decodeSigns(input)
 	if !ok {
 		return "", false
 	}
 
-	magnitude, significantPartPos, ok := sc.getEncodedMagnitude(in, positive, magnitudePositive)
+	magnitude, sStartPos, ok := c.decodeMagnitude(input, positive, magnitudePositive)
 	if !ok {
 		return "", false
 	}
 
-	length := len(in)
+	encodedLength := len(input)
 	if !positive {
-		length--
+		encodedLength--
 	}
 
-	significantPartLength := length - significantPartPos
-	decodedLength := sc.calculateDecodedLength(positive, magnitudePositive, magnitude, significantPartLength)
+	significantPartLength := encodedLength - sStartPos
 
-	sc.builder.Reset()
-	sc.builder.Grow(decodedLength)
+	c.builder.Reset()
+	c.builder.Grow(c.calculateDecodedLength(positive, magnitudePositive, magnitude, significantPartLength))
 
 	if !positive {
-		sc.builder.WriteByte(minusByte)
+		c.builder.WriteByte(minusByte)
 	}
 	if !magnitudePositive {
-		sc.builder.WriteByte(digit0)
-		sc.builder.WriteByte(decimalPoint)
+		c.builder.WriteByte(digit0)
+		c.builder.WriteByte(decimalPoint)
 		for i := 0; i < magnitude; i++ {
-			sc.builder.WriteByte(digit0)
+			c.builder.WriteByte(digit0)
 		}
-		sc.writeDigits(positive, in[significantPartPos:length])
+		c.writeDigits(positive, input[sStartPos:encodedLength])
 	} else {
 		if magnitude >= significantPartLength {
-			sc.writeDigits(positive, in[significantPartPos:length])
+			c.writeDigits(positive, input[sStartPos:encodedLength])
 			for i := 0; i < magnitude-significantPartLength; i++ {
-				sc.builder.WriteByte(digit0)
+				c.builder.WriteByte(digit0)
 			}
 		} else {
-			sc.writeDigits(positive, in[significantPartPos:significantPartPos+magnitude])
-			sc.builder.WriteByte(decimalPoint)
-			sc.writeDigits(positive, in[significantPartPos+magnitude:length])
+			c.writeDigits(positive, input[sStartPos:sStartPos+magnitude])
+			c.builder.WriteByte(decimalPoint)
+			c.writeDigits(positive, input[sStartPos+magnitude:encodedLength])
 		}
 	}
 
-	return sc.builder.String(), true
+	return c.builder.String(), true
 }
 
-func (sc *codec) EncodeInText(in string) (out string, ok bool) {
-	inNum := false
-	donePart := 0
+func (c *codec) EncodeMixedText(input string) (out string, ok bool) {
+	insideNumber := false
+	donePartEnd := 0
 	var b strings.Builder
 	ok = true
-	b.Grow(len(in) + 6)
+	b.Grow(len(input) + 6)
 
-	for i := 0; i < len(in); i++ {
-		if in[i] >= digit0 && in[i] <= digit9 {
-			if !inNum {
-				b.Write([]byte(in[donePart:i]))
-				donePart = i
-				inNum = true
-				if i > 0 && in[i-1] != inTextSeparator {
+	for i := 0; i < len(input); i++ {
+		if input[i] >= digit0 && input[i] <= digit9 {
+			if !insideNumber {
+				b.Write([]byte(input[donePartEnd:i]))
+				donePartEnd = i
+				insideNumber = true
+				if i > 0 && input[i-1] != inTextSeparator {
 					b.WriteByte(inTextSeparator)
 				}
 			}
 			continue
 		}
-		if inNum {
-			encoded, encOk := sc.Encode(in[donePart:i])
+		if insideNumber {
+			encoded, encOk := c.Encode(input[donePartEnd:i])
 			if encOk {
 				b.WriteString(encoded)
 			} else {
-				b.WriteString(in[donePart:i])
+				b.WriteString(input[donePartEnd:i])
 				ok = false
 			}
-			inNum = false
-			donePart = i
-			if in[i] != inTextSeparator {
+			insideNumber = false
+			donePartEnd = i
+			if input[i] != inTextSeparator {
 				b.WriteByte(inTextSeparator)
 			}
 		}
 	}
-	if !inNum {
-		b.WriteString(in[donePart:])
+	if !insideNumber {
+		b.WriteString(input[donePartEnd:])
 	} else {
-		encoded, encOk := sc.Encode(in[donePart:])
+		encoded, encOk := c.Encode(input[donePartEnd:])
 		if encOk {
 			b.WriteString(encoded)
 		} else {
-			b.WriteString(in[donePart:])
+			b.WriteString(input[donePartEnd:])
 			ok = false
 		}
 	}
@@ -157,60 +155,60 @@ func (sc *codec) EncodeInText(in string) (out string, ok bool) {
 	return
 }
 
-func (sc *codec) getPositivity(in string) (positive bool) {
-	return in[0] != minusByte
+func (c *codec) getPositivity(input string) (positive bool) {
+	return input[0] != minusByte
 }
 
-func (sc *codec) getStartPosition(in string) (start int) {
+func (c *codec) getSignificantStartPos(input string) int {
 	i := 0
-	for ; i < len(in); i++ {
-		if isDigit(in[i]) && in[i] != digit0 {
+	for ; i < len(input); i++ {
+		if isDigit(input[i]) && input[i] != digit0 {
 			return i
 		}
 	}
 	return -1
 }
 
-func (sc *codec) getEndPosition(in string) (end int) {
-	i := len(in) - 1
+func (c *codec) getSignificantEndPos(input string) int {
+	i := len(input) - 1
 	for ; i >= 0; i-- {
-		if isDigit(in[i]) && in[i] != digit0 {
+		if isDigit(input[i]) && input[i] != digit0 {
 			return i + 1
 		}
 	}
 	return -1
 }
 
-func (sc *codec) getDecimalPointPosition(in string) (decimalPointPos int) {
-	return strings.IndexByte(in, decimalPoint)
+func (c *codec) getDecimalPointPos(input string) int {
+	return strings.IndexByte(input, decimalPoint)
 }
 
-func (sc *codec) checkMagnitudeParams(length int, start int, end int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
+func (c *codec) getMagnitudeParams(inputLength int, sStartPos int, sEndPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
 	if decimalPointPos < 0 {
-		magnitude = length - start
+		magnitude = inputLength - sStartPos
 		magnitudePositive = true
-	} else if decimalPointPos < start {
-		magnitude = start - (decimalPointPos + 1)
+	} else if decimalPointPos < sStartPos {
+		magnitude = sStartPos - (decimalPointPos + 1)
 		magnitudePositive = false
 	} else {
-		magnitude = decimalPointPos - start
+		magnitude = decimalPointPos - sStartPos
 		magnitudePositive = true
 	}
 	return
 }
 
-func (sc *codec) calculateEncodedSize(positive bool, magnitude int, start int, end int, decimalPointPos int) (encodedLength int) {
-	encodedLength = 2 + (magnitude / maxMagnitudeDigitValue) + end - start
+func (c *codec) calculateEncodedSize(positive bool, magnitude int, sStartPos int, sEndPos int, decimalPointPos int) int {
+	length := 2 + (magnitude / maxMagnitudeDigitValue) + sEndPos - sStartPos
 	if !positive {
-		encodedLength++
+		length++
 	}
-	if start < decimalPointPos && decimalPointPos < end {
-		encodedLength--
+	if sStartPos < decimalPointPos && decimalPointPos < sEndPos {
+		length--
 	}
-	return
+	return length
 }
 
-func (sc *codec) encodeSign(positive bool, magnitudePositive bool) byte {
+func (c *codec) encodeSign(positive bool, magnitudePositive bool) byte {
 	if positive {
 		if magnitudePositive {
 			return signPositiveMagPositive
@@ -223,34 +221,34 @@ func (sc *codec) encodeSign(positive bool, magnitudePositive bool) byte {
 	return signNegativeMagNegative
 }
 
-func (sc *codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
-	flippedDigits := positive != magnitudePositive
+func (c *codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
+	reverseDigits := positive != magnitudePositive
 	for ; magnitude > maxMagnitudeDigitValue; magnitude -= maxMagnitudeDigitValue {
-		if flippedDigits {
-			sc.builder.WriteByte(intToReversedDigit(maxDigitValue))
+		if reverseDigits {
+			c.builder.WriteByte(intToReversedDigit(maxDigitValue))
 		} else {
-			sc.builder.WriteByte(intToDigit(maxDigitValue))
+			c.builder.WriteByte(intToDigit(maxDigitValue))
 		}
 	}
-	if flippedDigits {
-		sc.builder.WriteByte(intToReversedDigit(magnitude))
+	if reverseDigits {
+		c.builder.WriteByte(intToReversedDigit(magnitude))
 	} else {
-		sc.builder.WriteByte(intToDigit(magnitude))
+		c.builder.WriteByte(intToDigit(magnitude))
 	}
 }
 
-func (sc *codec) writeDigits(positive bool, digits string) {
+func (c *codec) writeDigits(positive bool, digits string) {
 	if positive {
-		sc.builder.WriteString(digits)
+		c.builder.WriteString(digits)
 	} else {
 		for i := 0; i < len(digits); i++ {
-			sc.builder.WriteByte(flipDigit(digits[i]))
+			c.builder.WriteByte(reverseDigit(digits[i]))
 		}
 
 	}
 }
 
-func (sc *codec) getEncodedSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
+func (c *codec) decodeSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
 	switch in[0] {
 	case signPositiveMagPositive:
 		return true, true, true
@@ -265,12 +263,11 @@ func (sc *codec) getEncodedSigns(in string) (positive bool, magnitudePositive bo
 	}
 }
 
-// magnitude, significantPartPos, ok := sc.getEncodedMagnitude(in)
-func (sc *codec) getEncodedMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
-	flippedDigits := positive != magnitudePositive
+func (c *codec) decodeMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
+	reverseDigits := positive != magnitudePositive
 	var digitValue int
 	for i := 1; i < len(in); i++ {
-		if flippedDigits {
+		if reverseDigits {
 			digitValue = reversedDigitToInt(in[i])
 		} else {
 			digitValue = digitToInt(in[i])
@@ -288,18 +285,16 @@ func (sc *codec) getEncodedMagnitude(in string, positive bool, magnitudePositive
 	return 0, 0, false
 }
 
-func (sc *codec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) (decodedLength int) {
+func (c *codec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) int {
+	var signLength int
 	if !positive {
-		decodedLength = 1
+		signLength = 1
 	}
 	if magnitudePositive {
 		if magnitude >= significantPartLength {
-			decodedLength += magnitude
-			return
+			return signLength + magnitude
 		}
-		decodedLength += significantPartLength + 1
-		return
+		return signLength + significantPartLength + 1
 	}
-	decodedLength += 2 + magnitude + significantPartLength
-	return
+	return signLength + 2 + magnitude + significantPartLength
 }

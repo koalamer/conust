@@ -111,7 +111,7 @@ func BenchmarkEncoding(b *testing.B) {
 	}
 }
 
-func TestEncodeInText(t *testing.T) {
+func TestEncodeMixedText(t *testing.T) {
 	testCases := []struct {
 		name   string
 		input  string
@@ -133,7 +133,7 @@ func TestEncodeInText(t *testing.T) {
 	c := NewCodec()
 	for _, i := range testCases {
 		t.Run(i.name, func(t *testing.T) {
-			encoded, ok := c.EncodeInText(i.input)
+			encoded, ok := c.EncodeMixedText(i.input)
 
 			if ok != i.ok {
 				t.Fatalf("ok expected %v got %v", i.ok, ok)
@@ -167,14 +167,14 @@ func Example_decode() {
 	// -0.0012 true
 	// 0.000125 true
 }
-func Example_encodeInText() {
+func Example_encodeMixedText() {
 	c := NewCodec()
-	fmt.Println(c.EncodeInText("SomeCam 40d"))
-	fmt.Println(c.EncodeInText("SomeCam 50d"))
-	fmt.Println(c.EncodeInText("SomeCam650d"))
-	fmt.Println(c.EncodeInText("SomeCam700d"))
-	fmt.Println(c.EncodeInText("SomeCam1000 d"))
-	fmt.Println(c.EncodeInText("SomeCam1100 d"))
+	fmt.Println(c.EncodeMixedText("SomeCam 40d"))
+	fmt.Println(c.EncodeMixedText("SomeCam 50d"))
+	fmt.Println(c.EncodeMixedText("SomeCam650d"))
+	fmt.Println(c.EncodeMixedText("SomeCam700d"))
+	fmt.Println(c.EncodeMixedText("SomeCam1000 d"))
+	fmt.Println(c.EncodeMixedText("SomeCam1100 d"))
 
 	// Output:
 	// SomeCam 724 d true
