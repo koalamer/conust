@@ -97,17 +97,15 @@ func BenchmarkEncoding(b *testing.B) {
 	from := -1 * to
 	for i := from; i <= to; i++ {
 		str := strconv.FormatFloat(i*step, 'f', -1, 64)
-		// encoded, ok := c.Encode(str)
-		_, ok := c.Encode(str)
+		encoded, ok := c.Encode(str)
 		if !ok {
 			b.Fatal("Encoding failed for", i)
 		}
-		/*
-			_, ok = c.Decode(encoded)
-			if !ok {
-				b.Fatal("Decoding failed for", encoded, "in", i)
-			}
-		*/
+
+		_, ok = c.Decode(encoded)
+		if !ok {
+			b.Fatal("Decoding failed for", encoded, "in", i)
+		}
 	}
 }
 
