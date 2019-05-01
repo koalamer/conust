@@ -121,14 +121,14 @@ func TestEncodeInText(t *testing.T) {
 		{name: "empty", input: "", ok: true, output: ""},
 		{name: "no numbers", input: "quick brown fox", ok: true, output: "quick brown fox"},
 		{name: "only numbers", input: "423", ok: true, output: "73423"},
-		{name: "mixed 1", input: "300Z", ok: true, output: "733Z"},
-		{name: "mixed 2", input: "A300Z", ok: true, output: "A733Z"},
-		{name: "mixed 3", input: "A300", ok: true, output: "A733"},
-		{name: "mixed 4", input: "If 2x + 3y = 8 and 4x + 12y = 28, what is x and y?", ok: true, output: "If 712x + 713y = 718 and 714x + 7212y = 7228, what is x and y?"},
-		{name: "mixed c1", input: "Canon EOS D300", ok: true, output: "Canon EOS D733"},
-		{name: "mixed c2", input: "Canon EOS D600", ok: true, output: "Canon EOS D736"},
-		{name: "mixed c3", input: "Canon EOS D1000", ok: true, output: "Canon EOS D741"},
-		{name: "mixed c4", input: "Canon EOS D1100", ok: true, output: "Canon EOS D7411"},
+		{name: "mixed 1", input: "300Z", ok: true, output: "733 Z"},
+		{name: "mixed 2", input: "A300Z", ok: true, output: "A 733 Z"},
+		{name: "mixed 3", input: "A300", ok: true, output: "A 733"},
+		{name: "mixed 4", input: "If 2x + 3y = 8 and 4x + 12y = 28, what is x and y?", ok: true, output: "If 712 x + 713 y = 718 and 714 x + 7212 y = 7228 , what is x and y?"},
+		{name: "mixed c1", input: "SomeCam300D", ok: true, output: "SomeCam 733 D"},
+		{name: "mixed c2", input: "SomeCam600D", ok: true, output: "SomeCam 736 D"},
+		{name: "mixed c3", input: "SomeCam1000D", ok: true, output: "SomeCam 741 D"},
+		{name: "mixed c4", input: "SomeCam1100D", ok: true, output: "SomeCam 7411 D"},
 	}
 	c := NewCodec()
 	for _, i := range testCases {
@@ -144,4 +144,43 @@ func TestEncodeInText(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Example_encode() {
+	c := NewCodec()
+	fmt.Println(c.Encode("86400"))
+	fmt.Println(c.Encode("-3.14"))
+	fmt.Println(c.Encode("-base36.number"))
+
+	// Output:
+	// 75864 true
+	// 3ywyv~ true
+	// 3top7lwtc5dol8~ true
+}
+
+func Example_decode() {
+	c := NewCodec()
+	fmt.Println(c.Decode("42yx~"))
+	fmt.Println(c.Decode("6w125"))
+
+	// Output:
+	// -0.0012 true
+	// 0.000125 true
+}
+func Example_encodeInText() {
+	c := NewCodec()
+	fmt.Println(c.EncodeInText("SomeCam 40d"))
+	fmt.Println(c.EncodeInText("SomeCam 50d"))
+	fmt.Println(c.EncodeInText("SomeCam650d"))
+	fmt.Println(c.EncodeInText("SomeCam700d"))
+	fmt.Println(c.EncodeInText("SomeCam1000 d"))
+	fmt.Println(c.EncodeInText("SomeCam1100 d"))
+
+	// Output:
+	// SomeCam 724 d true
+	// SomeCam 725 d true
+	// SomeCam 7365 d true
+	// SomeCam 737 d true
+	// SomeCam 741 d true
+	// SomeCam 7411 d true
 }

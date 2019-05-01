@@ -53,8 +53,9 @@ const GreaterThanAny = "8"
 
 const zeroInput = "0"
 
-const decimalPoint = '.'
+const decimalPoint byte = '.'
 const negativeNumberTerminator byte = '~'
+const inTextSeparator byte = ' '
 
 // Codec can transform strings to and from the Conust format.
 //

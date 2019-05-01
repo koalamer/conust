@@ -8,7 +8,7 @@ type codec struct {
 	builder strings.Builder
 }
 
-// NewCodec creates a slicey kind of codec
+// NewCodec creates a new codec instance. These instances are not thread safe.
 func NewCodec() (out Codec) {
 	out = &codec{}
 	return
@@ -112,7 +112,7 @@ func (sc *codec) EncodeInText(in string) (out string, ok bool) {
 	donePart := 0
 	var b strings.Builder
 	ok = true
-	b.Grow(len(in) + 10)
+	b.Grow(len(in) + 6)
 
 	for i := 0; i < len(in); i++ {
 		if in[i] >= digit0 && in[i] <= digit9 {
@@ -120,6 +120,9 @@ func (sc *codec) EncodeInText(in string) (out string, ok bool) {
 				b.Write([]byte(in[donePart:i]))
 				donePart = i
 				inNum = true
+				if i > 0 && in[i-1] != inTextSeparator {
+					b.WriteByte(inTextSeparator)
+				}
 			}
 			continue
 		}
@@ -133,6 +136,9 @@ func (sc *codec) EncodeInText(in string) (out string, ok bool) {
 			}
 			inNum = false
 			donePart = i
+			if in[i] != inTextSeparator {
+				b.WriteByte(inTextSeparator)
+			}
 		}
 	}
 	if !inNum {
