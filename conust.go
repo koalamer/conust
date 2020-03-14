@@ -67,6 +67,10 @@ const inTextSeparator byte = ' '
 type Codec interface {
 	// Encode turns the input into the alphanumerically sortable Conust string.
 	// If the input hase a base higher than 10 and contains letter characters, it must be lowercased.
+	// Note that if you want to incorporate the generated token into a string, and the token is not at
+	// the very end of it, then you will need to add a space character after the token to ensure correct
+	// sorting of the string.
+	// EncodeMixedText does that automatically
 	Encode(in string) (out string, ok bool)
 	// Decode turns a Conust string back into its normal representation
 	Decode(in string) (out string, ok bool)

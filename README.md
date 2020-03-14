@@ -39,12 +39,14 @@ For numbers with the sign digit of
 - "7" or "4" the magnitude digits are normal base 36 digits.
 - "6" and "3" the digits are value inverted: instead of X there will be the digit 35 - X
 
-After the magnitude come the significant digits of the original number, omitting the decimal point is there is any. The digits are treated as base 36 digits and are encoded:
+After the magnitude come the significant digits of the original number, omitting the decimal point if there is any. The digits are treated as base 36 digits and are encoded:
 
 - as normal digits if the number is positive, which basically means thet the digits are copied from the input
 - as inverted digits if the number is negative, meaning that instead of digit X, the digit 35 - X is stored
 
-Finally if the number is negative it is terminated by a "~" (tilde) character
+Finally if the number is negative it is terminated by a "~" (tilde) character.
+
+If the generated token is used inside a string, a space character should be appended to it to ensure proper sorting. (Unless the token is at the very end of the string, in which case it is unnecessary.) The EncodeMixedText function does this automatically.
 
 ## Conversion Examples
 
