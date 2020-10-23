@@ -14,6 +14,10 @@ func NewCodec() Codec {
 }
 
 func (c *codec) Encode(input string) (out string, ok bool) {
+	return c.EncodeToken(input)
+}
+
+func (c *codec) EncodeToken(input string) (out string, ok bool) {
 	if input == "" {
 		return "", true
 	}
@@ -47,6 +51,10 @@ func (c *codec) Encode(input string) (out string, ok bool) {
 }
 
 func (c *codec) Decode(input string) (out string, ok bool) {
+	return c.DecodeToken(input)
+}
+
+func (c *codec) DecodeToken(input string) (out string, ok bool) {
 	if input == "" {
 		return "", true
 	}
