@@ -59,13 +59,13 @@ func TestCodec(t *testing.T) {
 	codec := NewCodec()
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
-			encoded, _ := codec.Encode(i.input)
+			encoded, _ := codec.EncodeToken(i.input)
 
 			if i.encoded != encoded {
 				t.Fatalf("Encoding expected: %v, got %v\n", i.encoded, encoded)
 			}
 
-			decoded, _ := codec.Decode(encoded)
+			decoded, _ := codec.DecodeToken(encoded)
 			if i.decoded != decoded {
 				t.Fatalf("Decoding expected: %v, got %v\n", i.decoded, decoded)
 			}
@@ -79,7 +79,7 @@ func TestSortedness(t *testing.T) {
 	c := NewCodec()
 	for i := -111111.0; i <= 111111.0; i++ {
 		str := fmt.Sprintf("%3f", i*step)
-		encoded, ok := c.Encode(str)
+		encoded, ok := c.EncodeToken(str)
 		if !ok {
 			t.Fatal("Encoding failed for", i)
 		}
@@ -97,12 +97,12 @@ func BenchmarkEncoding(b *testing.B) {
 	from := -1 * to
 	for i := from; i <= to; i++ {
 		str := strconv.FormatFloat(i*step, 'f', -1, 64)
-		encoded, ok := c.Encode(str)
+		encoded, ok := c.EncodeToken(str)
 		if !ok {
 			b.Fatal("Encoding failed for", i)
 		}
 
-		_, ok = c.Decode(encoded)
+		_, ok = c.DecodeToken(encoded)
 		if !ok {
 			b.Fatal("Decoding failed for", encoded, "in", i)
 		}
@@ -144,41 +144,52 @@ func TestEncodeMixedText(t *testing.T) {
 	}
 }
 
-func Example_encode() {
+func Example_encodeToken() {
 	c := NewCodec()
-	fmt.Println(c.Encode("86400"))
-	fmt.Println(c.Encode("-3.14"))
-	fmt.Println(c.Encode("-base36.number"))
+	out, ok := c.EncodeToken("86400")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeToken("-3.14")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeToken("-base36.number")
+	fmt.Printf("%q, %v\n", out, ok)
 
 	// Output:
-	// 75864 true
-	// 3ywyv~ true
-	// 3top7lwtc5dol8~ true
+	// "75864", true
+	// "3ywyv~", true
+	// "3top7lwtc5dol8~", true
 }
 
-func Example_decode() {
+func Example_decodeToken() {
 	c := NewCodec()
-	fmt.Println(c.Decode("42yx~"))
-	fmt.Println(c.Decode("6w125"))
+	out, ok := c.DecodeToken("42yx~")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.DecodeToken("6w125")
+	fmt.Printf("%q, %v\n", out, ok)
 
 	// Output:
-	// -0.0012 true
-	// 0.000125 true
+	// "-0.0012", true
+	// "0.000125", true
 }
 func Example_encodeMixedText() {
 	c := NewCodec()
-	fmt.Println(c.EncodeMixedText("SomeCam 40d"))
-	fmt.Println(c.EncodeMixedText("SomeCam 50d"))
-	fmt.Println(c.EncodeMixedText("SomeCam650d"))
-	fmt.Println(c.EncodeMixedText("SomeCam700d"))
-	fmt.Println(c.EncodeMixedText("SomeCam1000 d"))
-	fmt.Println(c.EncodeMixedText("SomeCam1100 d"))
+	out, ok := c.EncodeMixedText("SomeCam 40d")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeMixedText("SomeCam 50d")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeMixedText("SomeCam650d")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeMixedText("SomeCam700d")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeMixedText("SomeCam1000 d")
+	fmt.Printf("%q, %v\n", out, ok)
+	out, ok = c.EncodeMixedText("SomeCam1100 d")
+	fmt.Printf("%q, %v\n", out, ok)
 
 	// Output:
-	// SomeCam 724 d true
-	// SomeCam 725 d true
-	// SomeCam 7365 d true
-	// SomeCam 737 d true
-	// SomeCam 741 d true
-	// SomeCam 7411 d true
+	// "SomeCam 724 d", true
+	// "SomeCam 725 d", true
+	// "SomeCam 7365 d", true
+	// "SomeCam 737 d", true
+	// "SomeCam 741 d", true
+	// "SomeCam 7411 d", true
 }
