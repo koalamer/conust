@@ -56,7 +56,7 @@ func TestCodec(t *testing.T) {
 		{name: "example 11", input: "-1200", encoded: "3vyx~", decoded: "-1200"},
 		{name: "example 12", input: "-12000000000000000000000000000000000000", encoded: "30vyx~", decoded: "-12000000000000000000000000000000000000"},
 	}
-	codec := NewCodec()
+	codec := new(Codec)
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, _ := codec.EncodeToken(i.input)
@@ -76,7 +76,7 @@ func TestCodec(t *testing.T) {
 func TestSortedness(t *testing.T) {
 	step := 0.01
 	prev := LessThanAny
-	c := NewCodec()
+	c := new(Codec)
 	for i := -111111.0; i <= 111111.0; i++ {
 		str := fmt.Sprintf("%3f", i*step)
 		encoded, ok := c.EncodeToken(str)
@@ -92,7 +92,7 @@ func TestSortedness(t *testing.T) {
 
 func BenchmarkEncoding(b *testing.B) {
 	step := 0.001
-	c := NewCodec()
+	c := new(Codec)
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
@@ -128,7 +128,7 @@ func TestEncodeMixedText(t *testing.T) {
 		{name: "mixed c3", input: "SomeCam1000D", ok: true, output: "SomeCam 741 D"},
 		{name: "mixed c4", input: "SomeCam1100D", ok: true, output: "SomeCam 7411 D"},
 	}
-	c := NewCodec()
+	c := new(Codec)
 	for _, i := range testCases {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, ok := c.EncodeMixedText(i.input)
@@ -145,7 +145,7 @@ func TestEncodeMixedText(t *testing.T) {
 }
 
 func ExampleCodec_EncodeToken() {
-	c := NewCodec()
+	c := new(Codec)
 
 	out, ok := c.EncodeToken("86400")
 	fmt.Printf("%q, %v\n", out, ok)
@@ -163,7 +163,7 @@ func ExampleCodec_EncodeToken() {
 }
 
 func ExampleCodec_DecodeToken() {
-	c := NewCodec()
+	c := new(Codec)
 
 	out, ok := c.DecodeToken("42yx~")
 	fmt.Printf("%q, %v\n", out, ok)
@@ -176,7 +176,7 @@ func ExampleCodec_DecodeToken() {
 	// "0.000125", true
 }
 func ExampleCodec_EncodeMixedText() {
-	c := NewCodec()
+	c := new(Codec)
 
 	out, ok := c.EncodeMixedText("SomeCam 40d")
 	fmt.Printf("%q, %v\n", out, ok)

@@ -4,20 +4,34 @@ import (
 	"strings"
 )
 
-type codec struct {
+// Codec can transform strings to and from the Conust format.
+//
+// It has EncodeToken and DecodeToken functions to transform simple numbers to and from the Conust format.
+//
+// There is also EncodeMixedText, a convenience function, that encodes each group of decimal numbers
+// and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
+// "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
+type Codec struct {
 	builder strings.Builder
 }
 
-// NewCodec creates a new codec instance. These instances are not thread safe.
-func NewCodec() Codec {
-	return &codec{}
+// NewCodec creates a new Codec instance. These instances are not thread safe.
+func NewCodec() *Codec {
+	return &Codec{}
 }
 
-func (c *codec) Encode(input string) (out string, ok bool) {
+// Encode (deprecated) is the alias for EncodeToken
+func (c *Codec) Encode(input string) (out string, ok bool) {
 	return c.EncodeToken(input)
 }
 
-func (c *codec) EncodeToken(input string) (out string, ok bool) {
+// EncodeToken turns the input number into the alphanumerically sortable Conust string.
+// If the input hase a base higher than 10 and contains letter characters, it must be lowercased.
+// Note that if you want to incorporate the generated token into a string, and the token is not at
+// the very end of it, then you will need to add a space character after the token to ensure correct
+// sorting of the string.
+// EncodeMixedText does that automatically
+func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 	if input == "" {
 		return "", true
 	}
@@ -50,11 +64,14 @@ func (c *codec) EncodeToken(input string) (out string, ok bool) {
 	return c.builder.String(), true
 }
 
-func (c *codec) Decode(input string) (out string, ok bool) {
+// Decode (deprecated) is the alias for DecodeToken
+func (c *Codec) Decode(input string) (out string, ok bool) {
 	return c.DecodeToken(input)
 }
 
-func (c *codec) DecodeToken(input string) (out string, ok bool) {
+// DecodeToken turns a Conust string back into its normal representation. The output will not reconstruct
+// leading and trailing zeros. The plus sign for positive numbers is omitted as well.
+func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 	if input == "" {
 		return "", true
 	}
@@ -113,7 +130,9 @@ func (c *codec) DecodeToken(input string) (out string, ok bool) {
 	return c.builder.String(), true
 }
 
-func (c *codec) EncodeMixedText(input string) (out string, ok bool) {
+// EncodeMixedText is a convinience function that replaces all groups of decimal numbers of the input
+// with Conust strings also surrounding them with spaces to ensure the expected ordering
+func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 	insideNumber := false
 	donePartEnd := 0
 	var b strings.Builder
@@ -163,11 +182,11 @@ func (c *codec) EncodeMixedText(input string) (out string, ok bool) {
 	return
 }
 
-func (c *codec) getPositivity(input string) (positive bool) {
+func (c *Codec) getPositivity(input string) (positive bool) {
 	return input[0] != minusByte
 }
 
-func (c *codec) getSignificantStartPos(input string) int {
+func (c *Codec) getSignificantStartPos(input string) int {
 	i := 0
 	for ; i < len(input); i++ {
 		if isDigit(input[i]) && input[i] != digit0 {
@@ -177,7 +196,7 @@ func (c *codec) getSignificantStartPos(input string) int {
 	return -1
 }
 
-func (c *codec) getSignificantEndPos(input string) int {
+func (c *Codec) getSignificantEndPos(input string) int {
 	i := len(input) - 1
 	for ; i >= 0; i-- {
 		if isDigit(input[i]) && input[i] != digit0 {
@@ -187,11 +206,11 @@ func (c *codec) getSignificantEndPos(input string) int {
 	return -1
 }
 
-func (c *codec) getDecimalPointPos(input string) int {
+func (c *Codec) getDecimalPointPos(input string) int {
 	return strings.IndexByte(input, decimalPoint)
 }
 
-func (c *codec) getMagnitudeParams(inputLength int, sStartPos int, sEndPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
+func (c *Codec) getMagnitudeParams(inputLength int, sStartPos int, sEndPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
 	if decimalPointPos < 0 {
 		magnitude = inputLength - sStartPos
 		magnitudePositive = true
@@ -205,7 +224,7 @@ func (c *codec) getMagnitudeParams(inputLength int, sStartPos int, sEndPos int, 
 	return
 }
 
-func (c *codec) calculateEncodedSize(positive bool, magnitude int, sStartPos int, sEndPos int, decimalPointPos int) int {
+func (c *Codec) calculateEncodedSize(positive bool, magnitude int, sStartPos int, sEndPos int, decimalPointPos int) int {
 	length := 2 + (magnitude / maxMagnitudeDigitValue) + sEndPos - sStartPos
 	if !positive {
 		length++
@@ -216,7 +235,7 @@ func (c *codec) calculateEncodedSize(positive bool, magnitude int, sStartPos int
 	return length
 }
 
-func (c *codec) encodeSign(positive bool, magnitudePositive bool) byte {
+func (c *Codec) encodeSign(positive bool, magnitudePositive bool) byte {
 	if positive {
 		if magnitudePositive {
 			return signPositiveMagPositive
@@ -229,7 +248,7 @@ func (c *codec) encodeSign(positive bool, magnitudePositive bool) byte {
 	return signNegativeMagNegative
 }
 
-func (c *codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
+func (c *Codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude int) {
 	reverseDigits := positive != magnitudePositive
 	for ; magnitude > maxMagnitudeDigitValue; magnitude -= maxMagnitudeDigitValue {
 		if reverseDigits {
@@ -245,7 +264,7 @@ func (c *codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude 
 	}
 }
 
-func (c *codec) writeDigits(positive bool, digits string) {
+func (c *Codec) writeDigits(positive bool, digits string) {
 	if positive {
 		c.builder.WriteString(digits)
 	} else {
@@ -256,7 +275,7 @@ func (c *codec) writeDigits(positive bool, digits string) {
 	}
 }
 
-func (c *codec) decodeSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
+func (c *Codec) decodeSigns(in string) (positive bool, magnitudePositive bool, ok bool) {
 	switch in[0] {
 	case signPositiveMagPositive:
 		return true, true, true
@@ -271,7 +290,7 @@ func (c *codec) decodeSigns(in string) (positive bool, magnitudePositive bool, o
 	}
 }
 
-func (c *codec) decodeMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
+func (c *Codec) decodeMagnitude(in string, positive bool, magnitudePositive bool) (magnitude int, significantPartPos int, ok bool) {
 	reverseDigits := positive != magnitudePositive
 	var digitValue int
 	for i := 1; i < len(in); i++ {
@@ -293,7 +312,7 @@ func (c *codec) decodeMagnitude(in string, positive bool, magnitudePositive bool
 	return 0, 0, false
 }
 
-func (c *codec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) int {
+func (c *Codec) calculateDecodedLength(positive bool, magnitudePositive bool, magnitude int, significantPartLength int) int {
 	var signLength int
 	if !positive {
 		signLength = 1

@@ -57,34 +57,6 @@ const decimalPoint byte = '.'
 const negativeNumberTerminator byte = '~'
 const inTextSeparator byte = ' '
 
-// Codec can transform strings to and from the Conust format.
-//
-// It has EncodeToken and DecodeToken functions to transform simple numbers to and from the Conust format.
-//
-// There is also EncodeMixedText, a convenience function, that encodes each group of decimal numbers
-// and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
-// "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
-type Codec interface {
-	// Encode (deprecated) is the alias for EncodeToken
-	Encode(in string) (out string, ok bool)
-	// Decode (deprecated) is the alias for DecodeToken
-	Decode(in string) (out string, ok bool)
-
-	// EncodeToken turns the input number into the alphanumerically sortable Conust string.
-	// If the input hase a base higher than 10 and contains letter characters, it must be lowercased.
-	// Note that if you want to incorporate the generated token into a string, and the token is not at
-	// the very end of it, then you will need to add a space character after the token to ensure correct
-	// sorting of the string.
-	// EncodeMixedText does that automatically
-	EncodeToken(in string) (out string, ok bool)
-	// DecodeToken turns a Conust string back into its normal representation. The output will not reconstruct
-	// leading and trailing zeros. The plus sign for positive numbers is omitted as well.
-	DecodeToken(in string) (out string, ok bool)
-	// EncodeMixedText is a convinience function that replaces all groups of decimal numbers of the input
-	// with Conust strings also surrounding them with spaces to ensure the expected ordering
-	EncodeMixedText(in string) (out string, ok bool)
-}
-
 func isDigit(digit byte) bool {
 	return (digit >= digit0 && digit <= digit9) ||
 		(digit >= digitA && digit <= digitZ)
