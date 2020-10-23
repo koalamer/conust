@@ -144,12 +144,15 @@ func TestEncodeMixedText(t *testing.T) {
 	}
 }
 
-func Example_encodeToken() {
+func ExampleCodec_EncodeToken() {
 	c := NewCodec()
+
 	out, ok := c.EncodeToken("86400")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeToken("-3.14")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeToken("-base36.number")
 	fmt.Printf("%q, %v\n", out, ok)
 
@@ -159,10 +162,12 @@ func Example_encodeToken() {
 	// "3top7lwtc5dol8~", true
 }
 
-func Example_decodeToken() {
+func ExampleCodec_DecodeToken() {
 	c := NewCodec()
+
 	out, ok := c.DecodeToken("42yx~")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.DecodeToken("6w125")
 	fmt.Printf("%q, %v\n", out, ok)
 
@@ -170,18 +175,24 @@ func Example_decodeToken() {
 	// "-0.0012", true
 	// "0.000125", true
 }
-func Example_encodeMixedText() {
+func ExampleCodec_EncodeMixedText() {
 	c := NewCodec()
+
 	out, ok := c.EncodeMixedText("SomeCam 40d")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeMixedText("SomeCam 50d")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeMixedText("SomeCam650d")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeMixedText("SomeCam700d")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeMixedText("SomeCam1000 d")
 	fmt.Printf("%q, %v\n", out, ok)
+
 	out, ok = c.EncodeMixedText("SomeCam1100 d")
 	fmt.Printf("%q, %v\n", out, ok)
 
