@@ -11,8 +11,6 @@ import (
 // There is also EncodeMixedText, a convenience function, that encodes each group of decimal numbers
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
-//
-// Codec is not thread safe.
 type Codec struct {
 	builder strings.Builder
 }
