@@ -11,13 +11,10 @@ import (
 // There is also EncodeMixedText, a convenience function, that encodes each group of decimal numbers
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
+//
+// Codec is not thread safe.
 type Codec struct {
 	builder strings.Builder
-}
-
-// NewCodec creates a new Codec instance. These instances are not thread safe.
-func NewCodec() *Codec {
-	return &Codec{}
 }
 
 // Encode (deprecated) is the alias for EncodeToken
@@ -131,7 +128,7 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 }
 
 // EncodeMixedText is a convinience function that replaces all groups of decimal numbers of the input
-// with Conust strings also surrounding them with spaces to ensure the expected ordering
+// with Conust strings also surrounding them with spaces (if not already present) to ensure the expected ordering
 func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 	insideNumber := false
 	donePartEnd := 0

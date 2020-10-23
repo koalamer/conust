@@ -181,16 +181,7 @@ func ExampleCodec_EncodeMixedText() {
 	out, ok := c.EncodeMixedText("SomeCam 40d")
 	fmt.Printf("%q, %v\n", out, ok)
 
-	out, ok = c.EncodeMixedText("SomeCam 50d")
-	fmt.Printf("%q, %v\n", out, ok)
-
-	out, ok = c.EncodeMixedText("SomeCam650d")
-	fmt.Printf("%q, %v\n", out, ok)
-
-	out, ok = c.EncodeMixedText("SomeCam700d")
-	fmt.Printf("%q, %v\n", out, ok)
-
-	out, ok = c.EncodeMixedText("SomeCam1000 d")
+	out, ok = c.EncodeMixedText("SomeCam350d")
 	fmt.Printf("%q, %v\n", out, ok)
 
 	out, ok = c.EncodeMixedText("SomeCam1100 d")
@@ -198,9 +189,6 @@ func ExampleCodec_EncodeMixedText() {
 
 	// Output:
 	// "SomeCam 724 d", true
-	// "SomeCam 725 d", true
-	// "SomeCam 7365 d", true
-	// "SomeCam 737 d", true
-	// "SomeCam 741 d", true
+	// "SomeCam 7335 d", true
 	// "SomeCam 7411 d", true
 }
