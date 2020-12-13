@@ -81,10 +81,20 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 
 	encodedLength := len(input)
 	if !positive {
+		if input[encodedLength-1] != negativeNumberTerminator {
+			return "", false
+		}
+
 		encodedLength--
 	}
 
 	significantPartLength := encodedLength - sStartPos
+
+	for i := sStartPos; i < encodedLength; i++ {
+		if !isDigit(input[i]) {
+			return "", false
+		}
+	}
 
 	c.builder.Reset()
 	c.builder.Grow(c.calculateDecodedLength(positive, magnitudePositive, magnitude, significantPartLength))
@@ -256,7 +266,6 @@ func (c *Codec) writeDigits(positive bool, digits string) {
 		for i := 0; i < len(digits); i++ {
 			c.builder.WriteByte(reverseDigit(digits[i]))
 		}
-
 	}
 }
 
