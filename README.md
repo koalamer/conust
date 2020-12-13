@@ -20,6 +20,8 @@ Beside the simple EncodeToken and DecodeToken functions that deal with individua
 
 ## Encoded Format Description
 
+If you would like to implement the algorithm in another language or just see how it works, here is the format description of the generated tokens:
+
 Encoding an empty string results in an empty string.
 
 For non empty input all trailing and heading zeros are ignored, and the first digit of the encoded number X will be:
