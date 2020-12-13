@@ -15,11 +15,6 @@ type Codec struct {
 	builder strings.Builder
 }
 
-// Encode (deprecated) is the alias for EncodeToken
-func (c *Codec) Encode(input string) (out string, ok bool) {
-	return c.EncodeToken(input)
-}
-
 // EncodeToken turns the input number into the alphanumerically sortable Conust string.
 // If the input hase a base higher than 10 and contains letter characters, it must be lowercased.
 // Note that if you want to incorporate the generated token into a string, and the token is not at
@@ -57,11 +52,6 @@ func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 		c.builder.WriteByte(negativeNumberTerminator)
 	}
 	return c.builder.String(), true
-}
-
-// Decode (deprecated) is the alias for DecodeToken
-func (c *Codec) Decode(input string) (out string, ok bool) {
-	return c.DecodeToken(input)
 }
 
 // DecodeToken turns a Conust string back into its normal representation. The output will not reconstruct
@@ -147,7 +137,7 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 			continue
 		}
 		if insideNumber {
-			encoded, encOk := c.Encode(input[donePartEnd:i])
+			encoded, encOk := c.EncodeToken(input[donePartEnd:i])
 			if encOk {
 				b.WriteString(encoded)
 			} else {
@@ -164,7 +154,7 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 	if !insideNumber {
 		b.WriteString(input[donePartEnd:])
 	} else {
-		encoded, encOk := c.Encode(input[donePartEnd:])
+		encoded, encOk := c.EncodeToken(input[donePartEnd:])
 		if encOk {
 			b.WriteString(encoded)
 		} else {
