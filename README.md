@@ -1,6 +1,6 @@
 # CONUST
 
-A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation. It is meant to be used either when text tokens and numbers are stored both as strings and you need proper sorting on them using simple string sorting, or when there are strings containing both text and numbers and you would like the number parts to cause an ordering that is based on their numeric value (for example in the case of store items in a webshop with type numbers in the item names.)
+A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation. It is meant to be used either when text tokens and numbers are stored both as strings and you need proper sorting on them using simple string sorting, or when there are strings containing both text and numbers and you would like the number parts to cause an ordering that is based on their numeric value (for example in the case of store items in a webshop with type numbers in the item names).
 
 ## Transforming single numbers
 
