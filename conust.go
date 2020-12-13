@@ -10,6 +10,10 @@
 // The conversion adds a few characters to the length of the original numeric string, but at
 // the same time it can save some space by storing only the significant portion of the number
 // omitting trailing and leading zeros of it in the output.
+//
+// Beside transforming single numbers to sortable strings, you can also transform a string containing both
+// text and numbers into a properly sortable version. However, the reverse transformation of such mixed strings
+// is not possible.
 package conust
 
 // [48 49 50 51 52 53 54 55 56 57
