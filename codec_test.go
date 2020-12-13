@@ -2,6 +2,7 @@ package conust
 
 import (
 	"fmt"
+	"math/rand"
 	"strconv"
 	"testing"
 )
@@ -20,8 +21,18 @@ func TestCodec(t *testing.T) {
 		{name: "zero 3", input: "-000", encoded: "5", decoded: "0"},
 		{name: "zero 4", input: "000.0000", encoded: "5", decoded: "0"},
 
-		{name: "all digits", input: "1234567890abcdefghij.klmnopqrstuvwxyz", encoded: "7k1234567890abcdefghijklmnopqrstuvwxyz", decoded: "1234567890abcdefghij.klmnopqrstuvwxyz"},
-		{name: "negative all digits", input: "-1234567890abcdefghij.klmnopqrstuvwxyz", encoded: "3fyxwvutsrqzponmlkjihgfedcba9876543210~", decoded: "-1234567890abcdefghij.klmnopqrstuvwxyz"},
+		{
+			name:    "all digits",
+			input:   "1234567890abcdefghij.klmnopqrstuvwxyz",
+			encoded: "7k1234567890abcdefghijklmnopqrstuvwxyz",
+			decoded: "1234567890abcdefghij.klmnopqrstuvwxyz",
+		},
+		{
+			name:    "negative all digits",
+			input:   "-1234567890abcdefghij.klmnopqrstuvwxyz",
+			encoded: "3fyxwvutsrqzponmlkjihgfedcba9876543210~",
+			decoded: "-1234567890abcdefghij.klmnopqrstuvwxyz",
+		},
 
 		{name: "holes in the middle", input: "005f002k00.0i0k0", encoded: "785f002k000i0k", decoded: "5f002k00.0i0k"},
 
@@ -33,41 +44,143 @@ func TestCodec(t *testing.T) {
 		{name: "ugly negative int", input: "-00000123000", encoded: "3tyxw~", decoded: "-123000"},
 		{name: "fractional", input: "54321.12345", encoded: "755432112345", decoded: "54321.12345"},
 		{name: "negative fractional", input: "-54321.12345", encoded: "3uuvwxyyxwvu~", decoded: "-54321.12345"},
-		{name: "ugly fractional", input: "+00054321000.00012345000", encoded: "785432100000012345", decoded: "54321000.00012345"},
-		{name: "ugly negative fractional", input: "-00054321000.00012345000", encoded: "3ruvwxyzzzzzzyxwvu~", decoded: "-54321000.00012345"},
+		{
+			name:    "ugly fractional",
+			input:   "+00054321000.00012345000",
+			encoded: "785432100000012345",
+			decoded: "54321000.00012345",
+		},
+		{
+			name:    "ugly negative fractional",
+			input:   "-00054321000.00012345000",
+			encoded: "3ruvwxyzzzzzzyxwvu~",
+			decoded: "-54321000.00012345",
+		},
 		{name: "cowboy hat", input: "cowboy.hat", encoded: "76cowboyhat", decoded: "cowboy.hat"},
 		{name: "negative cowboy hat", input: "-cowboy.hat", encoded: "3tnb3ob1ip6~", decoded: "-cowboy.hat"},
-		{name: "maximum int length", input: "12345678901234567890123456789012345.1", encoded: "7z1123456789012345678901234567890123451", decoded: "12345678901234567890123456789012345.1"},
-		{name: "maximum negative int length", input: "-12345678901234567890123456789012345.1", encoded: "30yyxwvutsrqzyxwvutsrqzyxwvutsrqzyxwvuy~", decoded: "-12345678901234567890123456789012345.1"},
-		{name: "maximum fracleading zero count", input: "0.000000000000000000000000000000000004325430", encoded: "60y432543", decoded: "0.00000000000000000000000000000000000432543"},
+		{
+			name:    "maximum int length",
+			input:   "12345678901234567890123456789012345.1",
+			encoded: "7z1123456789012345678901234567890123451",
+			decoded: "12345678901234567890123456789012345.1",
+		},
+		{
+			name:    "maximum negative int length",
+			input:   "-12345678901234567890123456789012345.1",
+			encoded: "30yyxwvutsrqzyxwvutsrqzyxwvutsrqzyxwvuy~",
+			decoded: "-12345678901234567890123456789012345.1",
+		},
+		{
+			name:    "maximum fracleading zero count",
+			input:   "0.000000000000000000000000000000000004325430",
+			encoded: "60y432543",
+			decoded: "0.00000000000000000000000000000000000432543",
+		},
 
-		{name: "example 1", input: "12000000000000000000000000000000000000", encoded: "7z412", decoded: "12000000000000000000000000000000000000"},
+		{
+			name:    "example 1",
+			input:   "12000000000000000000000000000000000000",
+			encoded: "7z412",
+			decoded: "12000000000000000000000000000000000000",
+		},
 		{name: "example 2", input: "1200", encoded: "7412", decoded: "1200"},
 		{name: "example 3", input: "12", encoded: "7212", decoded: "12"},
 		{name: "example 4", input: "1.2", encoded: "7112", decoded: "1.2"},
 		{name: "example 5", input: "0.12", encoded: "6z12", decoded: "0.12"},
 		{name: "example 6", input: "0.0012", encoded: "6x12", decoded: "0.0012"},
-		{name: "example 6.2", input: "0.0000000000000000000000000000000000012", encoded: "60y12", decoded: "0.0000000000000000000000000000000000012"},
-		{name: "example 6.3", input: "-0.0000000000000000000000000000000000012", encoded: "4z1yx~", decoded: "-0.0000000000000000000000000000000000012"},
+		{
+			name:    "example 6.2",
+			input:   "0.0000000000000000000000000000000000012",
+			encoded: "60y12",
+			decoded: "0.0000000000000000000000000000000000012",
+		},
+		{
+			name:    "example 6.3",
+			input:   "-0.0000000000000000000000000000000000012",
+			encoded: "4z1yx~",
+			decoded: "-0.0000000000000000000000000000000000012",
+		},
 		{name: "example 7", input: "-0.0012", encoded: "42yx~", decoded: "-0.0012"},
 		{name: "example 8", input: "-0.12", encoded: "40yx~", decoded: "-0.12"},
 		{name: "example 9", input: "-1.2", encoded: "3yyx~", decoded: "-1.2"},
 		{name: "example 10", input: "-12", encoded: "3xyx~", decoded: "-12"},
 		{name: "example 11", input: "-1200", encoded: "3vyx~", decoded: "-1200"},
-		{name: "example 12", input: "-12000000000000000000000000000000000000", encoded: "30vyx~", decoded: "-12000000000000000000000000000000000000"},
+		{
+			name:    "example 12",
+			input:   "-12000000000000000000000000000000000000",
+			encoded: "30vyx~",
+			decoded: "-12000000000000000000000000000000000000",
+		},
 	}
-	codec := NewCodec()
+	codec := new(Codec)
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
-			encoded, _ := codec.Encode(i.input)
+			encoded, ok := codec.EncodeToken(i.input)
+
+			if !ok {
+				t.Fatalf("Encoding failed for: %v\n", i.input)
+			}
 
 			if i.encoded != encoded {
 				t.Fatalf("Encoding expected: %v, got %v\n", i.encoded, encoded)
 			}
 
-			decoded, _ := codec.Decode(encoded)
+			decoded, ok := codec.DecodeToken(encoded)
+
+			if !ok {
+				t.Fatalf("Decoding failed for: %v <- %v\n", i.input, decoded)
+			}
+
 			if i.decoded != decoded {
 				t.Fatalf("Decoding expected: %v, got %v\n", i.decoded, decoded)
+			}
+		})
+	}
+}
+
+func TestCodec_EncodeToken_Failure(t *testing.T) {
+	codecTests := []struct {
+		name  string
+		input string
+	}{
+		{name: "space 1", input: " 123"},
+		{name: "space 2", input: "123 "},
+		{name: "space 3", input: "1 23"},
+		{name: "multiple decimal points 1", input: "1.2.3"},
+		{name: "multiple decimal points 2", input: "1.23."},
+		{name: "unexpected character 1", input: "X123"},
+		{name: "unexpected character 2", input: "123X"},
+		{name: "unexpected character 3", input: "12X3"},
+	}
+
+	codec := new(Codec)
+	for _, i := range codecTests {
+		t.Run(i.name, func(t *testing.T) {
+			encoded, ok := codec.EncodeToken(i.input)
+
+			if ok || encoded != "" {
+				t.Fatalf("Encoding should have failed for: %v\n", i.input)
+			}
+		})
+	}
+}
+
+func TestCodec_DecodeToken_Failure(t *testing.T) {
+	codecTests := []struct {
+		name  string
+		input string
+	}{
+		{name: "non digit char", input: "7z412X"},
+		{name: "bad prefix", input: "2z412"},
+	}
+
+	codec := new(Codec)
+	for _, i := range codecTests {
+		t.Run(i.name, func(t *testing.T) {
+			decoded, ok := codec.DecodeToken(i.input)
+
+			if ok || decoded != "" {
+				t.Fatalf("Decoding should have failed for: %v\n", i.input)
 			}
 		})
 	}
@@ -76,10 +189,10 @@ func TestCodec(t *testing.T) {
 func TestSortedness(t *testing.T) {
 	step := 0.01
 	prev := LessThanAny
-	c := NewCodec()
+	c := new(Codec)
 	for i := -111111.0; i <= 111111.0; i++ {
 		str := fmt.Sprintf("%3f", i*step)
-		encoded, ok := c.Encode(str)
+		encoded, ok := c.EncodeToken(str)
 		if !ok {
 			t.Fatal("Encoding failed for", i)
 		}
@@ -92,17 +205,17 @@ func TestSortedness(t *testing.T) {
 
 func BenchmarkEncoding(b *testing.B) {
 	step := 0.001
-	c := NewCodec()
+	c := new(Codec)
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
 		str := strconv.FormatFloat(i*step, 'f', -1, 64)
-		encoded, ok := c.Encode(str)
+		encoded, ok := c.EncodeToken(str)
 		if !ok {
 			b.Fatal("Encoding failed for", i)
 		}
 
-		_, ok = c.Decode(encoded)
+		_, ok = c.DecodeToken(encoded)
 		if !ok {
 			b.Fatal("Decoding failed for", encoded, "in", i)
 		}
@@ -119,16 +232,27 @@ func TestEncodeMixedText(t *testing.T) {
 		{name: "empty", input: "", ok: true, output: ""},
 		{name: "no numbers", input: "quick brown fox", ok: true, output: "quick brown fox"},
 		{name: "only numbers", input: "423", ok: true, output: "73423"},
-		{name: "mixed 1", input: "300Z", ok: true, output: "733 Z"},
-		{name: "mixed 2", input: "A300Z", ok: true, output: "A 733 Z"},
-		{name: "mixed 3", input: "A300", ok: true, output: "A 733"},
-		{name: "mixed 4", input: "If 2x + 3y = 8 and 4x + 12y = 28, what is x and y?", ok: true, output: "If 712 x + 713 y = 718 and 714 x + 7212 y = 7228 , what is x and y?"},
+		{name: "only numbers end with space", input: "423 ", ok: true, output: "73423 "},
+		{name: "only numbers starts with space", input: " 423", ok: true, output: " 73423"},
+		{name: "sign is like text", input: "-423", ok: true, output: "- 73423"},
+		{name: "mixed 1.1", input: "300Z", ok: true, output: "733 Z"},
+		{name: "mixed 1.2", input: "300 Z", ok: true, output: "733 Z"},
+		{name: "mixed 2.1", input: "A300Z", ok: true, output: "A 733 Z"},
+		{name: "mixed 2.2", input: "A 300 Z", ok: true, output: "A 733 Z"},
+		{name: "mixed 3.1", input: "A300", ok: true, output: "A 733"},
+		{name: "mixed 3.2", input: "A 300", ok: true, output: "A 733"},
+		{
+			name:   "mixed 4",
+			input:  "If 2x + 3y = 8 and 4x + 12y = 28, what is x and y?",
+			ok:     true,
+			output: "If 712 x + 713 y = 718 and 714 x + 7212 y = 7228 , what is x and y?",
+		},
 		{name: "mixed c1", input: "SomeCam300D", ok: true, output: "SomeCam 733 D"},
 		{name: "mixed c2", input: "SomeCam600D", ok: true, output: "SomeCam 736 D"},
 		{name: "mixed c3", input: "SomeCam1000D", ok: true, output: "SomeCam 741 D"},
 		{name: "mixed c4", input: "SomeCam1100D", ok: true, output: "SomeCam 7411 D"},
 	}
-	c := NewCodec()
+	c := new(Codec)
 	for _, i := range testCases {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, ok := c.EncodeMixedText(i.input)
@@ -144,41 +268,82 @@ func TestEncodeMixedText(t *testing.T) {
 	}
 }
 
-func Example_encode() {
-	c := NewCodec()
-	fmt.Println(c.Encode("86400"))
-	fmt.Println(c.Encode("-3.14"))
-	fmt.Println(c.Encode("-base36.number"))
+func BenchmarkEncodeMixedText(b *testing.B) {
+	var charPool = [...]byte{
+		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+		'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+		'u', 'v', 'w', 'x', 'y', 'z',
+		' ', ' ', ' ', ' ', ' ', ' ',
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	}
 
-	// Output:
-	// 75864 true
-	// 3ywyv~ true
-	// 3top7lwtc5dol8~ true
+	var genText = make([]byte, 1024)
+	var textLen = len(genText)
+
+	rand.Seed(42)
+	c := new(Codec)
+
+	for i := 0; i < textLen; i++ {
+		genText[i] = charPool[rand.Intn(len(charPool))]
+	}
+
+	for i := 0; i < b.N; i++ {
+		start := rand.Intn(textLen)
+		end := rand.Intn(textLen-start) + start
+		fragment := string(genText[start:end])
+		_, ok := c.EncodeMixedText(fragment)
+
+		if !ok {
+			b.Fatal("Encoding failed for " + fragment)
+		}
+	}
 }
 
-func Example_decode() {
-	c := NewCodec()
-	fmt.Println(c.Decode("42yx~"))
-	fmt.Println(c.Decode("6w125"))
+func ExampleCodec_EncodeToken() {
+	c := new(Codec)
+
+	out, ok := c.EncodeToken("86400")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	out, ok = c.EncodeToken("-3.14")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	out, ok = c.EncodeToken("-base36.number")
+	fmt.Printf("%q, %v\n", out, ok)
 
 	// Output:
-	// -0.0012 true
-	// 0.000125 true
+	// "75864", true
+	// "3ywyv~", true
+	// "3top7lwtc5dol8~", true
 }
-func Example_encodeMixedText() {
-	c := NewCodec()
-	fmt.Println(c.EncodeMixedText("SomeCam 40d"))
-	fmt.Println(c.EncodeMixedText("SomeCam 50d"))
-	fmt.Println(c.EncodeMixedText("SomeCam650d"))
-	fmt.Println(c.EncodeMixedText("SomeCam700d"))
-	fmt.Println(c.EncodeMixedText("SomeCam1000 d"))
-	fmt.Println(c.EncodeMixedText("SomeCam1100 d"))
+
+func ExampleCodec_DecodeToken() {
+	c := new(Codec)
+
+	out, ok := c.DecodeToken("42yx~")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	out, ok = c.DecodeToken("6w125")
+	fmt.Printf("%q, %v\n", out, ok)
 
 	// Output:
-	// SomeCam 724 d true
-	// SomeCam 725 d true
-	// SomeCam 7365 d true
-	// SomeCam 737 d true
-	// SomeCam 741 d true
-	// SomeCam 7411 d true
+	// "-0.0012", true
+	// "0.000125", true
+}
+func ExampleCodec_EncodeMixedText() {
+	c := new(Codec)
+
+	out, ok := c.EncodeMixedText("SomeCam 40d")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	out, ok = c.EncodeMixedText("SomeCam350d")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	out, ok = c.EncodeMixedText("SomeCam1100 d")
+	fmt.Printf("%q, %v\n", out, ok)
+
+	// Output:
+	// "SomeCam 724 d", true
+	// "SomeCam 7335 d", true
+	// "SomeCam 7411 d", true
 }

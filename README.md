@@ -1,18 +1,26 @@
 # CONUST
 
-A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation. It is meant to be used when text tokens and numbers are stored both as strings and you need proper sorting on them using simple string sorting.
+A utility to transform numbers into alphabetically sortable strings with the ability of reversing the transformation. It is meant to be used either when text tokens and numbers are stored both as strings and you need proper sorting on them using simple string sorting, or when there are strings containing both text and numbers and you would like the number parts to cause an ordering that is based on their numeric value (for example in the case of store items in a webshop with type numbers in the item names).
 
-The input for the encoding must be a numeric string. It need not be integer, floating point numbers are accepted as well. The input can be in a base between 2 and 36. If the input has a base higher than 10, and contains letters, those must be lower cased.
+## Transforming single numbers
+
+You can encode single numbers (both integers and non integers) with EncodeToken, and you can also reverse the transformation with DecodeToken.
+
+The input for the encoding must be a numeric string. It need not be integer, floating point numbers are accepted as well. The input can be in a base between 2 and 36. If the input has a base higher than 10, and contains letters, those must be lower cased before transformation.
 
 The encoded version can be 1 - 3 characters longer than the original, but on the other hand the transformation only keeps the significant section of the number, removing all trailing and heading zeros, thereby possibly saving some space.
 
-Beside the simple Encode and Decode functions that deal with individual numeric strings, there is the EncodeMixedText convenience function that scans the input for subsequent decimal characters and creates an output where these are encoded by Encode and surrounded by spaces.
+The proper sorting of the generated tokens is only warranted if they are used by themselves or at the end of a string. If you would like to put the generated token at the beginning or in the middle of some string, append a space to the end of the token to ensure proper sorting of the string as a whole.
 
-## Conust for other languages
+Reverting the transformation results in a numerically accurate representation of the original number, but the positive sign characters, leading zeros, unnecessary fractional parts are not reconstructed.
 
-Currently there is only this Go version, but the converted format is simple to implement. See the next section if you would like to give it a try. (I might do ports myself later.)
+## Transforming strings containing both text and numbers
+
+Beside the simple EncodeToken and DecodeToken functions that deal with individual numeric strings, there is the EncodeMixedText convenience function that scans the input for decimal integer numbers and creates an output where these are encoded by EncodeToken and surrounded by spaces. This function only looks for series of decimal digits, so positive and negative signs and the decimal point are all treated as text, not as part of a number.
 
 ## Encoded Format Description
+
+If you would like to implement the algorithm in another language or just see how it works, here is the format description of the generated tokens:
 
 Encoding an empty string results in an empty string.
 
