@@ -115,15 +115,72 @@ func TestCodec(t *testing.T) {
 	codec := new(Codec)
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
-			encoded, _ := codec.EncodeToken(i.input)
+			encoded, ok := codec.EncodeToken(i.input)
+
+			if !ok {
+				t.Fatalf("Encoding failed for: %v\n", i.input)
+			}
 
 			if i.encoded != encoded {
 				t.Fatalf("Encoding expected: %v, got %v\n", i.encoded, encoded)
 			}
 
-			decoded, _ := codec.DecodeToken(encoded)
+			decoded, ok := codec.DecodeToken(encoded)
+
+			if !ok {
+				t.Fatalf("Decoding failed for: %v <- %v\n", i.input, decoded)
+			}
+
 			if i.decoded != decoded {
 				t.Fatalf("Decoding expected: %v, got %v\n", i.decoded, decoded)
+			}
+		})
+	}
+}
+
+func TestCodec_EncodeToken_Failure(t *testing.T) {
+	codecTests := []struct {
+		name  string
+		input string
+	}{
+		{name: "space 1", input: " 123"},
+		{name: "space 2", input: "123 "},
+		{name: "space 3", input: "1 23"},
+		{name: "multiple decimal points 1", input: "1.2.3"},
+		{name: "multiple decimal points 2", input: "1.23."},
+		{name: "unexpected character 1", input: "X123"},
+		{name: "unexpected character 2", input: "123X"},
+		{name: "unexpected character 3", input: "12X3"},
+	}
+
+	codec := new(Codec)
+	for _, i := range codecTests {
+		t.Run(i.name, func(t *testing.T) {
+			encoded, ok := codec.EncodeToken(i.input)
+
+			if ok || encoded != "" {
+				t.Fatalf("Encoding should have failed for: %v\n", i.input)
+			}
+		})
+	}
+}
+
+func TestCodec_DecodeToken_Failure(t *testing.T) {
+	codecTests := []struct {
+		name  string
+		input string
+	}{
+		{name: "non digit char", input: "7z412X"},
+		{name: "bad prefix", input: "2z412"},
+	}
+
+	codec := new(Codec)
+	for _, i := range codecTests {
+		t.Run(i.name, func(t *testing.T) {
+			decoded, ok := codec.DecodeToken(i.input)
+
+			if ok || decoded != "" {
+				t.Fatalf("Decoding should have failed for: %v\n", i.input)
 			}
 		})
 	}
