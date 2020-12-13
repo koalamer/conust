@@ -26,6 +26,10 @@ func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 		return "", true
 	}
 
+	if !c.isValidInput(input) {
+		return "", false
+	}
+
 	positive := c.getPositivity(input)
 	decimalPointPos := c.getDecimalPointPos(input)
 	sStartPos := c.getSignificantStartPos(input)
@@ -175,6 +179,32 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 
 	out = b.String()
 	return
+}
+
+func (c *Codec) isValidInput(input string) bool {
+	if !isSignByte(input[0]) && !isDigit(input[0]) {
+		return false
+	}
+
+	decimalPointAlreadyFound := false
+	for i := 1; i < len(input); i++ {
+		if isDigit(input[i]) {
+			continue
+		}
+
+		if decimalPointAlreadyFound {
+			return false
+		}
+
+		if input[i] == decimalPoint {
+			decimalPointAlreadyFound = true
+			continue
+		}
+
+		return false
+	}
+
+	return true
 }
 
 func (c *Codec) getPositivity(input string) (positive bool) {
