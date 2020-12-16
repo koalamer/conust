@@ -170,6 +170,9 @@ func TestCodec_DecodeToken_Failure(t *testing.T) {
 		name  string
 		input string
 	}{
+		{name: "too short", input: "4b"},
+		{name: "magnitude error", input: "600"},
+		{name: "no negative terminator", input: "40zx"},
 		{name: "non digit char", input: "7z412X"},
 		{name: "bad prefix", input: "2z412"},
 	}
