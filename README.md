@@ -62,7 +62,7 @@ You can find conversion test data in the test files, but to showcase a few scena
 
 | input | encoded version | sing byte | magnitude | significant digits |
 |---|---|---|---|---|
-| 120000000000000000000000000000000 | 7z412 | 7 (x>=1) | z4 (34+4=38) | 12 |
+| 12000000000000000000000000000000000000 | 7z412 | 7 (x>=1) | z4 (34+4=38) | 12 |
 | 1200 |7412 | 7 (x>=1) | 4 | 12 |
 | 12 |7212 | 7 (x>=1) | 2 | 12 |
 | 1.2 |7112 | 7 (x>=1) | 1 | 12 |
