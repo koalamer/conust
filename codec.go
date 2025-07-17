@@ -39,7 +39,7 @@ func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 		return zeroOutput, true
 	}
 
-	magnitude, magnitudePositive := c.getMagnitudeParams(len(input), sStartPos, sEndPos, decimalPointPos)
+	magnitude, magnitudePositive := c.getMagnitudeParams(len(input), sStartPos, decimalPointPos)
 
 	c.builder.Reset()
 	c.builder.Grow(c.calculateEncodedSize(positive, magnitude, sStartPos, sEndPos, decimalPointPos))
@@ -235,7 +235,7 @@ func (c *Codec) getDecimalPointPos(input string) int {
 	return strings.IndexByte(input, decimalPoint)
 }
 
-func (c *Codec) getMagnitudeParams(inputLength int, sStartPos int, sEndPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
+func (c *Codec) getMagnitudeParams(inputLength int, sStartPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
 	if decimalPointPos < 0 {
 		magnitude = inputLength - sStartPos
 		magnitudePositive = true

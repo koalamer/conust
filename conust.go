@@ -36,7 +36,6 @@ const maxDigitValue = 35
 const maxMagnitudeDigitValue = 34
 
 const digit0 byte = '0'
-const digit1 byte = '1'
 const digit9 byte = '9'
 const digitA byte = 'a'
 const digitZ byte = 'z'
