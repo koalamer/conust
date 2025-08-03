@@ -29,6 +29,33 @@ func TestArrayReversion(t *testing.T) {
 	}
 }
 
+func TestArrayReversionWithNormalization(t *testing.T) {
+	digitDictionaryLength := len(uppercaseDigits36)
+	expectedDictionaryLength := 36
+
+	if digitDictionaryLength != expectedDictionaryLength {
+		t.Fatalf("Digit dictionary length is %d instead of %d", digitDictionaryLength, expectedDictionaryLength)
+	}
+
+	if digitDictionaryLength != len(digits36Reversed) {
+		t.Fatal("Forward and backward digit dictionaries are of different length")
+	}
+
+	offset := digitDictionaryLength - 1
+	for i, ud := range uppercaseDigits36 {
+		reversed := reverseDigit(ud)
+		if reversed != digits36[offset-i] {
+			t.Fatalf("uppercase digit[%d] = %s reversed to %s but reverse digit[%d] = %s",
+				i,
+				string(ud),
+				string(reversed),
+				offset-i,
+				string(digits36[offset-i]),
+			)
+		}
+	}
+}
+
 func TestArraySortedness(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -105,5 +132,14 @@ func TestDigitValueLimits(t *testing.T) {
 	}
 	if maxDigitValue-1 != maxMagnitudeDigitValue {
 		t.Fatal("maxMagnitudeDigitValue is not in sync with maxDigitValue")
+	}
+}
+
+func TestDigitNormalization(t *testing.T) {
+	for i, d := range uppercaseDigits36 {
+		var nd = normalizeDigit(digits36[i])
+		if digits36[i] != nd {
+			t.Fatal("digit normalization failed for '" + string(d) + "', got: " + string(nd))
+		}
 	}
 }

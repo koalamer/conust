@@ -26,6 +26,12 @@ var digits36 = [...]byte{
 	'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
 	'u', 'v', 'w', 'x', 'y', 'z'}
 
+var uppercaseDigits36 = [...]byte{
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+	'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+	'U', 'V', 'W', 'X', 'Y', 'Z'}
+
 var digits36Reversed = [...]byte{
 	'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', 'q',
 	'p', 'o', 'n', 'm', 'l', 'k', 'j', 'i', 'h', 'g',
