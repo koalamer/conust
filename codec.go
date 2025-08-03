@@ -34,6 +34,8 @@ func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 	decimalPointPos := c.getDecimalPointPos(input)
 	sStartPos := c.getSignificantStartPos(input)
 	sEndPos := c.getSignificantEndPos(input)
+	// TODO get thousand separator count for magnitude calculation
+	// TODO one function could scan the number for all five params instead of having separate functions
 
 	if sStartPos == sEndPos {
 		return zeroOutput, true

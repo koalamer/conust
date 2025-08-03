@@ -148,9 +148,9 @@ func TestCodec_EncodeToken_Failure(t *testing.T) {
 		{name: "space 3", input: "1 23"},
 		{name: "multiple decimal points 1", input: "1.2.3"},
 		{name: "multiple decimal points 2", input: "1.23."},
-		{name: "unexpected character 1", input: "X123"},
-		{name: "unexpected character 2", input: "123X"},
-		{name: "unexpected character 3", input: "12X3"},
+		{name: "unexpected character 1", input: "[123"},
+		{name: "unexpected character 2", input: "123,"},
+		{name: "unexpected character 3", input: "12+3"},
 	}
 
 	codec := new(Codec)
@@ -173,7 +173,7 @@ func TestCodec_DecodeToken_Failure(t *testing.T) {
 		{name: "too short", input: "4b"},
 		{name: "magnitude error", input: "600"},
 		{name: "no negative terminator", input: "40zx"},
-		{name: "non digit char", input: "7z412X"},
+		{name: "non digit char", input: "7z412)"},
 		{name: "bad prefix", input: "2z412"},
 	}
 

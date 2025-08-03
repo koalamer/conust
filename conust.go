@@ -35,10 +35,12 @@ var digits36Reversed = [...]byte{
 const maxDigitValue = 35
 const maxMagnitudeDigitValue = 34
 
-const digit0 byte = '0'
-const digit9 byte = '9'
-const digitA byte = 'a'
-const digitZ byte = 'z'
+const digit0 byte = '0'          // ASCII 48
+const digit9 byte = '9'          // ASCII 57
+const digitUppercaseA byte = 'A' // ASCII 65
+const digitUppercaseZ byte = 'Z' // ASCII 90
+const digitA byte = 'a'          // ASCII 97
+const digitZ byte = 'z'          // ASCII 122
 const minusByte byte = '-'
 const plusByte byte = '+'
 
@@ -58,6 +60,9 @@ const GreaterThanAny = "8"
 
 const zeroInput = "0"
 
+const useThousandSeparator = false
+const thousandSeparator byte = ','
+
 const decimalPoint byte = '.'
 const negativeNumberTerminator byte = '~'
 const inTextSeparator byte = ' '
@@ -66,21 +71,32 @@ func isSignByte(b byte) bool {
 	return b == minusByte || b == plusByte
 }
 
-func isDigit(digit byte) bool {
-	return (digit >= digit0 && digit <= digit9) ||
-		(digit >= digitA && digit <= digitZ)
+func isDigit(b byte) bool {
+	return (b >= digit0 && b <= digit9) ||
+		(b >= digitA && b <= digitZ) ||
+		(b >= digitUppercaseA && b <= digitUppercaseZ)
+}
+
+func isThousandSeparator(b byte) bool {
+	return useThousandSeparator && b == thousandSeparator
 }
 
 func digitToInt(digit byte) int {
-	if digit < digitA {
+	if digit <= digit9 {
 		return int(digit - digit0)
+	}
+	if digit <= digitUppercaseZ {
+		return 10 + int(digit-digitUppercaseA)
 	}
 	return 10 + int(digit-digitA)
 }
 
 func reversedDigitToInt(digit byte) int {
-	if digit < digitA {
+	if digit <= digit9 {
 		return 26 + int(digit9-digit)
+	}
+	if digit <= digitUppercaseZ {
+		return int(digitUppercaseZ - digit)
 	}
 	return int(digitZ - digit)
 }
