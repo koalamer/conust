@@ -35,12 +35,13 @@ var digits36Reversed = [...]byte{
 const maxDigitValue = 35
 const maxMagnitudeDigitValue = 34
 
-const digit0 byte = '0'          // ASCII 48
-const digit9 byte = '9'          // ASCII 57
-const digitUppercaseA byte = 'A' // ASCII 65
-const digitUppercaseZ byte = 'Z' // ASCII 90
-const digitA byte = 'a'          // ASCII 97
-const digitZ byte = 'z'          // ASCII 122
+const digit0 byte = '0'            // ASCII 48
+const digit9 byte = '9'            // ASCII 57
+const digitUppercaseA byte = 'A'   // ASCII 65
+const digitUppercaseZ byte = 'Z'   // ASCII 90
+const digitA byte = 'a'            // ASCII 97
+const digitZ byte = 'z'            // ASCII 122
+const digitNormalizerBit byte = 32 // 0-9, a-z all have this bit, A-Z do not
 const minusByte byte = '-'
 const plusByte byte = '+'
 
@@ -111,4 +112,8 @@ func intToReversedDigit(i int) byte {
 
 func reverseDigit(digit byte) byte {
 	return intToReversedDigit(digitToInt(digit))
+}
+
+func normalizeDigit(digit byte) byte {
+	return digit | digitNormalizerBit
 }

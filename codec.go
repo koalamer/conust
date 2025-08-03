@@ -293,7 +293,9 @@ func (c *Codec) writeMagnitude(positive bool, magnitudePositive bool, magnitude 
 
 func (c *Codec) writeDigits(positive bool, digits string) {
 	if positive {
-		c.builder.WriteString(digits)
+		for i := 0; i < len(digits); i++ {
+			c.builder.WriteByte(normalizeDigit(digits[i]))
+		}
 	} else {
 		for i := 0; i < len(digits); i++ {
 			c.builder.WriteByte(reverseDigit(digits[i]))

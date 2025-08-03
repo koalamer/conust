@@ -34,6 +34,19 @@ func TestCodec(t *testing.T) {
 			decoded: "-1234567890abcdefghij.klmnopqrstuvwxyz",
 		},
 
+		{
+			name:    "all digits with upper case",
+			input:   "1234567890ABCDEFGHIJ.KLMNOPQRSTUVWXYZ",
+			encoded: "7k1234567890abcdefghijklmnopqrstuvwxyz",
+			decoded: "1234567890abcdefghij.klmnopqrstuvwxyz",
+		},
+		{
+			name:    "negative all digits with upper case",
+			input:   "-1234567890ABCDEFGHIJ.KLMNOPQRSTUVWXYZ",
+			encoded: "3fyxwvutsrqzponmlkjihgfedcba9876543210~",
+			decoded: "-1234567890abcdefghij.klmnopqrstuvwxyz",
+		},
+
 		{name: "holes in the middle", input: "005f002k00.0i0k0", encoded: "785f002k000i0k", decoded: "5f002k00.0i0k"},
 
 		{name: "one", input: "1", encoded: "711", decoded: "1"},
