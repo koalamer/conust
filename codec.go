@@ -1,6 +1,8 @@
 package conust
 
 import (
+	"errors"
+	"slices"
 	"strings"
 )
 
@@ -9,6 +11,16 @@ const defaultUseThousandSeparator = false
 
 const defaultDecimalSeparator byte = '.'
 const defaultUseDecimalSeparator = true
+
+var allowedSeparators = [...]byte{
+	' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')',
+	'*', ',', '-', '.', '/', ':', ';', '<', '=', '>',
+	'?', '@', '[', '\\', ']', '^', '_', '`', '{', '|',
+	'}', '~',
+}
+
+var errInvalidSeparator = errors.New("invalid separator")
+var errIdenticalSeparators = errors.New("thousand and decimal separators must not be identical")
 
 // Codec can transform strings to and from the Conust format.
 //
@@ -33,6 +45,53 @@ func NewDefaultCodec() *Codec {
 		useDecimalSeparator:  defaultUseDecimalSeparator,
 		builder:              strings.Builder{},
 	}
+}
+
+func (c *Codec) NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, error) {
+	if thousandSeparator == decimalSeparator {
+		return nil, errIdenticalSeparators
+	}
+
+	if !slices.Contains(allowedSeparators[:], thousandSeparator) ||
+		!slices.Contains(allowedSeparators[:], decimalSeparator) {
+		return nil, errInvalidSeparator
+	}
+
+	return &Codec{
+		thousandSeparator:    thousandSeparator,
+		useThousandSeparator: true,
+		decimalSeparator:     decimalSeparator,
+		useDecimalSeparator:  true,
+		builder:              strings.Builder{},
+	}, nil
+}
+
+func (c *Codec) NewCodecWithThousandSeparator(separator byte) (*Codec, error) {
+	if !slices.Contains(allowedSeparators[:], separator) {
+		return nil, errInvalidSeparator
+	}
+
+	return &Codec{
+		thousandSeparator:    separator,
+		useThousandSeparator: true,
+		decimalSeparator:     defaultDecimalSeparator,
+		useDecimalSeparator:  false,
+		builder:              strings.Builder{},
+	}, nil
+}
+
+func (c *Codec) WithDecimalSeparator(separator byte) (*Codec, error) {
+	if !slices.Contains(allowedSeparators[:], separator) {
+		return nil, errInvalidSeparator
+	}
+
+	return &Codec{
+		thousandSeparator:    defaultThousandSeparator,
+		useThousandSeparator: false,
+		decimalSeparator:     separator,
+		useDecimalSeparator:  true,
+		builder:              strings.Builder{},
+	}, nil
 }
 
 // EncodeToken turns the input number into the alphanumerically sortable Conust string.
