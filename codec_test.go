@@ -326,16 +326,16 @@ func BenchmarkEncodeMixedText(b *testing.B) {
 	var genText = make([]byte, 1024)
 	var textLen = len(genText)
 
-	rand.Seed(42)
+	r := rand.New(rand.NewSource(42))
 	c := new(Codec)
 
 	for i := 0; i < textLen; i++ {
-		genText[i] = charPool[rand.Intn(len(charPool))]
+		genText[i] = charPool[r.Intn(len(charPool))]
 	}
 
 	for i := 0; i < b.N; i++ {
-		start := rand.Intn(textLen)
-		end := rand.Intn(textLen-start) + start
+		start := r.Intn(textLen)
+		end := r.Intn(textLen-start) + start
 		fragment := string(genText[start:end])
 		_, ok := c.EncodeMixedText(fragment)
 
