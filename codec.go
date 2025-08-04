@@ -4,6 +4,12 @@ import (
 	"strings"
 )
 
+const defaultThousandSeparator byte = ' '
+const defaultUseThousandSeparator = false
+
+const defaultDecimalSeparator byte = '.'
+const defaultUseDecimalSeparator = true
+
 // Codec can transform strings to and from the Conust format.
 //
 // It has EncodeToken and DecodeToken functions to transform simple numbers to and from the Conust format.
@@ -12,7 +18,21 @@ import (
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
 type Codec struct {
-	builder strings.Builder
+	thousandSeparator    byte
+	useThousandSeparator bool
+	decimalSeparator     byte
+	useDecimalSeparator  bool
+	builder              strings.Builder
+}
+
+func NewDefaultCodec() *Codec {
+	return &Codec{
+		thousandSeparator:    defaultThousandSeparator,
+		useThousandSeparator: defaultUseThousandSeparator,
+		decimalSeparator:     defaultDecimalSeparator,
+		useDecimalSeparator:  defaultUseDecimalSeparator,
+		builder:              strings.Builder{},
+	}
 }
 
 // EncodeToken turns the input number into the alphanumerically sortable Conust string.
@@ -110,7 +130,7 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 	}
 	if !magnitudePositive {
 		c.builder.WriteByte(digit0)
-		c.builder.WriteByte(decimalPoint)
+		c.builder.WriteByte(c.decimalSeparator)
 		for i := 0; i < magnitude; i++ {
 			c.builder.WriteByte(digit0)
 		}
@@ -123,7 +143,7 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 			}
 		} else {
 			c.writeDigits(positive, input[sStartPos:sStartPos+magnitude])
-			c.builder.WriteByte(decimalPoint)
+			c.builder.WriteByte(c.decimalSeparator)
 			c.writeDigits(positive, input[sStartPos+magnitude:encodedLength])
 		}
 	}
@@ -198,7 +218,7 @@ func (c *Codec) isValidInput(input string) bool {
 			return false
 		}
 
-		if input[i] == decimalPoint {
+		if c.isDecimalSeparator(input[i]) {
 			decimalPointAlreadyFound = true
 			continue
 		}
@@ -234,7 +254,7 @@ func (c *Codec) getSignificantEndPos(input string) int {
 }
 
 func (c *Codec) getDecimalPointPos(input string) int {
-	return strings.IndexByte(input, decimalPoint)
+	return strings.IndexByte(input, c.decimalSeparator)
 }
 
 func (c *Codec) getMagnitudeParams(inputLength int, sStartPos int, decimalPointPos int) (magnitude int, magnitudePositive bool) {
@@ -352,4 +372,12 @@ func (c *Codec) calculateDecodedLength(positive bool, magnitudePositive bool, ma
 		return signLength + significantPartLength + 1
 	}
 	return signLength + 2 + magnitude + significantPartLength
+}
+
+func (c *Codec) isThousandSeparator(b byte) bool {
+	return b == c.thousandSeparator
+}
+
+func (c *Codec) isDecimalSeparator(b byte) bool {
+	return b == c.decimalSeparator
 }

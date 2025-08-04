@@ -67,10 +67,6 @@ const GreaterThanAny = "8"
 
 const zeroInput = "0"
 
-const useThousandSeparator = false
-const thousandSeparator byte = ','
-
-const decimalPoint byte = '.'
 const negativeNumberTerminator byte = '~'
 const inTextSeparator byte = ' '
 
@@ -82,10 +78,6 @@ func isDigit(b byte) bool {
 	return (b >= digit0 && b <= digit9) ||
 		(b >= digitA && b <= digitZ) ||
 		(b >= digitUppercaseA && b <= digitUppercaseZ)
-}
-
-func isThousandSeparator(b byte) bool {
-	return useThousandSeparator && b == thousandSeparator
 }
 
 func digitToInt(digit byte) int {
