@@ -30,11 +30,11 @@ var errIdenticalSeparators = errors.New("thousand and decimal separators must no
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
 type Codec struct {
-	thousandSeparator    byte
-	useThousandSeparator bool
-	decimalSeparator     byte
-	useDecimalSeparator  bool
 	builder              strings.Builder
+	thousandSeparator    byte
+	decimalSeparator     byte
+	useThousandSeparator bool
+	useDecimalSeparator  bool
 }
 
 func NewDefaultCodec() *Codec {
@@ -263,29 +263,44 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 }
 
 func (c *Codec) isValidInput(input string) bool {
-	if !isSignByte(input[0]) && !isDigit(input[0]) {
+	previousByteWasDigit := isDigit(input[0])
+
+	if !isSignByte(input[0]) && !previousByteWasDigit {
 		return false
 	}
 
-	decimalPointAlreadyFound := false
+	decimalSeparatorAlreadyFound := false
+
 	for i := 1; i < len(input); i++ {
 		if isDigit(input[i]) {
+			previousByteWasDigit = true
 			continue
 		}
 
-		if decimalPointAlreadyFound {
-			return false
+		if c.isThousandSeparator(input[i]) {
+			if !previousByteWasDigit {
+				return false
+			}
+
+			previousByteWasDigit = false
+			continue
 		}
 
 		if c.isDecimalSeparator(input[i]) {
-			decimalPointAlreadyFound = true
+			if decimalSeparatorAlreadyFound ||
+				!previousByteWasDigit {
+				return false
+			}
+
+			decimalSeparatorAlreadyFound = true
+			previousByteWasDigit = false
 			continue
 		}
 
 		return false
 	}
 
-	return true
+	return previousByteWasDigit
 }
 
 func (c *Codec) getPositivity(input string) (positive bool) {
@@ -434,9 +449,11 @@ func (c *Codec) calculateDecodedLength(positive bool, magnitudePositive bool, ma
 }
 
 func (c *Codec) isThousandSeparator(b byte) bool {
-	return b == c.thousandSeparator
+	return c.useThousandSeparator &&
+		b == c.thousandSeparator
 }
 
 func (c *Codec) isDecimalSeparator(b byte) bool {
-	return b == c.decimalSeparator
+	return c.useDecimalSeparator &&
+		b == c.decimalSeparator
 }
