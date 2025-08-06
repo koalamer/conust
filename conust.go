@@ -50,6 +50,7 @@ const digitZ byte = 'z'            // ASCII 122
 const digitNormalizerBit byte = 32 // 0-9, a-z all have this bit, A-Z do not
 const minusByte byte = '-'
 const plusByte byte = '+'
+const maxAsciiByte byte = 127
 
 const signNegativeMagPositive byte = '3'
 const signNegativeMagNegative byte = '4'
@@ -78,6 +79,12 @@ func isDigit(b byte) bool {
 	return (b >= digit0 && b <= digit9) ||
 		(b >= digitA && b <= digitZ) ||
 		(b >= digitUppercaseA && b <= digitUppercaseZ)
+}
+
+func isAllowedAsSeparator(b byte) bool {
+	return !isDigit(b) &&
+		!isSignByte(b) &&
+		b <= maxAsciiByte
 }
 
 func digitToInt(digit byte) int {

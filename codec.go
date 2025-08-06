@@ -2,22 +2,10 @@ package conust
 
 import (
 	"errors"
-	"slices"
 	"strings"
 )
 
-const defaultThousandSeparator byte = ' '
-const defaultUseThousandSeparator = false
-
-const defaultDecimalSeparator byte = '.'
-const defaultUseDecimalSeparator = true
-
-var allowedSeparators = [...]byte{
-	' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')',
-	'*', ',', '-', '.', '/', ':', ';', '<', '=', '>',
-	'?', '@', '[', '\\', ']', '^', '_', '`', '{', '|',
-	'}', '~',
-}
+const separatorPlaceholderByte byte = 0
 
 var errInvalidSeparator = errors.New("invalid separator")
 var errIdenticalSeparators = errors.New("thousand and decimal separators must not be identical")
@@ -37,23 +25,13 @@ type Codec struct {
 	useDecimalSeparator  bool
 }
 
-func NewDefaultCodec() *Codec {
-	return &Codec{
-		thousandSeparator:    defaultThousandSeparator,
-		useThousandSeparator: defaultUseThousandSeparator,
-		decimalSeparator:     defaultDecimalSeparator,
-		useDecimalSeparator:  defaultUseDecimalSeparator,
-		builder:              strings.Builder{},
-	}
-}
-
-func (c *Codec) NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, error) {
+func NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, error) {
 	if thousandSeparator == decimalSeparator {
 		return nil, errIdenticalSeparators
 	}
 
-	if !slices.Contains(allowedSeparators[:], thousandSeparator) ||
-		!slices.Contains(allowedSeparators[:], decimalSeparator) {
+	if !isAllowedAsSeparator(thousandSeparator) ||
+		!isAllowedAsSeparator(decimalSeparator) {
 		return nil, errInvalidSeparator
 	}
 
@@ -66,27 +44,27 @@ func (c *Codec) NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, erro
 	}, nil
 }
 
-func (c *Codec) NewCodecWithThousandSeparator(separator byte) (*Codec, error) {
-	if !slices.Contains(allowedSeparators[:], separator) {
+func NewCodecWithThousandSeparator(separator byte) (*Codec, error) {
+	if !isAllowedAsSeparator(separator) {
 		return nil, errInvalidSeparator
 	}
 
 	return &Codec{
 		thousandSeparator:    separator,
 		useThousandSeparator: true,
-		decimalSeparator:     defaultDecimalSeparator,
+		decimalSeparator:     separatorPlaceholderByte,
 		useDecimalSeparator:  false,
 		builder:              strings.Builder{},
 	}, nil
 }
 
-func (c *Codec) WithDecimalSeparator(separator byte) (*Codec, error) {
-	if !slices.Contains(allowedSeparators[:], separator) {
+func NewCodecWithDecimalSeparator(separator byte) (*Codec, error) {
+	if !isAllowedAsSeparator(separator) {
 		return nil, errInvalidSeparator
 	}
 
 	return &Codec{
-		thousandSeparator:    defaultThousandSeparator,
+		thousandSeparator:    separatorPlaceholderByte,
 		useThousandSeparator: false,
 		decimalSeparator:     separator,
 		useDecimalSeparator:  true,
@@ -262,6 +240,7 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 	return
 }
 
+// TODO tests for separator handling
 func (c *Codec) isValidInput(input string) bool {
 	previousByteWasDigit := isDigit(input[0])
 
