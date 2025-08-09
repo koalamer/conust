@@ -18,14 +18,15 @@ var errIdenticalSeparators = errors.New("thousand and decimal separators must no
 // and returns the resulting string. So that for example the strings "Item 20" and "Item 100" become
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
 type Codec struct {
-	builder              strings.Builder
+	builder strings.Builder
+	digitTester
 	thousandSeparator    byte
 	decimalSeparator     byte
 	useThousandSeparator bool
 	useDecimalSeparator  bool
 }
 
-func NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, error) {
+func NewCodec(radix int, thousandSeparator, decimalSeparator byte) (*Codec, error) {
 	if thousandSeparator == decimalSeparator {
 		return nil, errIdenticalSeparators
 	}
@@ -35,40 +36,58 @@ func NewCodec(thousandSeparator, decimalSeparator byte) (*Codec, error) {
 		return nil, errInvalidSeparator
 	}
 
+	tester, err := newDigitTester(radix)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Codec{
+		builder:              strings.Builder{},
+		digitTester:          *tester,
 		thousandSeparator:    thousandSeparator,
 		useThousandSeparator: true,
 		decimalSeparator:     decimalSeparator,
 		useDecimalSeparator:  true,
-		builder:              strings.Builder{},
 	}, nil
 }
 
-func NewCodecWithThousandSeparator(separator byte) (*Codec, error) {
+func NewCodecWithThousandSeparator(radix int, separator byte) (*Codec, error) {
 	if !isAllowedAsSeparator(separator) {
 		return nil, errInvalidSeparator
 	}
 
+	tester, err := newDigitTester(radix)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Codec{
+		builder:              strings.Builder{},
+		digitTester:          *tester,
 		thousandSeparator:    separator,
 		useThousandSeparator: true,
 		decimalSeparator:     separatorPlaceholderByte,
 		useDecimalSeparator:  false,
-		builder:              strings.Builder{},
 	}, nil
 }
 
-func NewCodecWithDecimalSeparator(separator byte) (*Codec, error) {
+func NewCodecWithDecimalSeparator(radix int, separator byte) (*Codec, error) {
 	if !isAllowedAsSeparator(separator) {
 		return nil, errInvalidSeparator
 	}
 
+	tester, err := newDigitTester(radix)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Codec{
+		builder:              strings.Builder{},
+		digitTester:          *tester,
 		thousandSeparator:    separatorPlaceholderByte,
 		useThousandSeparator: false,
 		decimalSeparator:     separator,
 		useDecimalSeparator:  true,
-		builder:              strings.Builder{},
 	}, nil
 }
 
@@ -81,10 +100,6 @@ func NewCodecWithDecimalSeparator(separator byte) (*Codec, error) {
 func (c *Codec) EncodeToken(input string) (out string, ok bool) {
 	if input == "" {
 		return "", true
-	}
-
-	if !c.isValidInput(input) {
-		return "", false
 	}
 
 	positive := c.getPositivity(input)
@@ -193,18 +208,19 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 	insideNumber := false
 	donePartEnd := 0
-	var b strings.Builder
 	ok = true
-	b.Grow(len(input) + 6)
+
+	c.builder.Reset()
+	c.builder.Grow(len(input) + 6)
 
 	for i := 0; i < len(input); i++ {
 		if input[i] >= digit0 && input[i] <= digit9 {
 			if !insideNumber {
-				b.Write([]byte(input[donePartEnd:i]))
+				c.builder.Write([]byte(input[donePartEnd:i]))
 				donePartEnd = i
 				insideNumber = true
 				if i > 0 && input[i-1] != inTextSeparator {
-					b.WriteByte(inTextSeparator)
+					c.builder.WriteByte(inTextSeparator)
 				}
 			}
 			continue
@@ -212,74 +228,32 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 		if insideNumber {
 			encoded, encOk := c.EncodeToken(input[donePartEnd:i])
 			if encOk {
-				b.WriteString(encoded)
+				c.builder.WriteString(encoded)
 			} else {
-				b.WriteString(input[donePartEnd:i])
+				c.builder.WriteString(input[donePartEnd:i])
 				ok = false
 			}
 			insideNumber = false
 			donePartEnd = i
 			if input[i] != inTextSeparator {
-				b.WriteByte(inTextSeparator)
+				c.builder.WriteByte(inTextSeparator)
 			}
 		}
 	}
 	if !insideNumber {
-		b.WriteString(input[donePartEnd:])
+		c.builder.WriteString(input[donePartEnd:])
 	} else {
 		encoded, encOk := c.EncodeToken(input[donePartEnd:])
 		if encOk {
-			b.WriteString(encoded)
+			c.builder.WriteString(encoded)
 		} else {
-			b.WriteString(input[donePartEnd:])
+			c.builder.WriteString(input[donePartEnd:])
 			ok = false
 		}
 	}
 
-	out = b.String()
+	out = c.builder.String()
 	return
-}
-
-// TODO tests for separator handling
-func (c *Codec) isValidInput(input string) bool {
-	previousByteWasDigit := isDigit(input[0])
-
-	if !isSignByte(input[0]) && !previousByteWasDigit {
-		return false
-	}
-
-	decimalSeparatorAlreadyFound := false
-
-	for i := 1; i < len(input); i++ {
-		if isDigit(input[i]) {
-			previousByteWasDigit = true
-			continue
-		}
-
-		if c.isThousandSeparator(input[i]) {
-			if !previousByteWasDigit {
-				return false
-			}
-
-			previousByteWasDigit = false
-			continue
-		}
-
-		if c.isDecimalSeparator(input[i]) {
-			if decimalSeparatorAlreadyFound ||
-				!previousByteWasDigit {
-				return false
-			}
-
-			decimalSeparatorAlreadyFound = true
-			previousByteWasDigit = false
-			continue
-		}
-
-		return false
-	}
-
-	return previousByteWasDigit
 }
 
 func (c *Codec) getPositivity(input string) (positive bool) {

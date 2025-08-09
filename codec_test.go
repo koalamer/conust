@@ -8,7 +8,7 @@ import (
 )
 
 func TestCodec_Instantiation(t *testing.T) {
-	c, err := NewCodecWithDecimalSeparator('.')
+	c, err := NewCodecWithDecimalSeparator(10, '.')
 
 	if c == nil {
 		t.Fatal("failed to instantiate codec")
@@ -167,7 +167,7 @@ func TestCodec(t *testing.T) {
 			decoded: "-12000000000000000000000000000000000000",
 		},
 	}
-	codec, _ := NewCodecWithDecimalSeparator('.')
+	codec, _ := NewCodecWithDecimalSeparator(10, '.')
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, ok := codec.EncodeToken(i.input)
@@ -193,39 +193,6 @@ func TestCodec(t *testing.T) {
 	}
 }
 
-func TestCodec_EncodeToken_Validation_Failure_With_Decimal_Separator(t *testing.T) {
-	codecTests := []struct {
-		name  string
-		input string
-	}{
-		{name: "unexpected space 1", input: " 123"},
-		{name: "unexpected space 2", input: "123 "},
-		{name: "unexpected space 3", input: "1 23"},
-		{name: "too many sign bytes", input: "+-123"},
-		{name: "too many sign bytes", input: "+123+"},
-		{name: "decimal point before digit 1", input: ".123"},
-		{name: "decimal point before digit 2", input: "+.123"},
-		{name: "decimal point before digit 3", input: "-.123"},
-		{name: "multiple decimal points 1", input: "1.2.3"},
-		{name: "multiple decimal points 2", input: "1.23."},
-		{name: "multiple decimal points 3", input: "1..23"},
-		{name: "unexpected character 1", input: "[123"},
-		{name: "unexpected character 2", input: "123,"},
-		{name: "unexpected character 3", input: "12+3"},
-	}
-
-	codec, _ := NewCodecWithDecimalSeparator('.')
-	for _, i := range codecTests {
-		t.Run(i.name, func(t *testing.T) {
-			encoded, ok := codec.EncodeToken(i.input)
-
-			if ok || encoded != "" {
-				t.Fatalf("Encoding should have failed for: %v\n", i.input)
-			}
-		})
-	}
-}
-
 func TestCodec_DecodeToken_Failure(t *testing.T) {
 	codecTests := []struct {
 		name  string
@@ -238,7 +205,7 @@ func TestCodec_DecodeToken_Failure(t *testing.T) {
 		{name: "bad prefix", input: "2z412"},
 	}
 
-	codec, _ := NewCodecWithDecimalSeparator('.')
+	codec, _ := NewCodecWithDecimalSeparator(10, '.')
 	for _, i := range codecTests {
 		t.Run(i.name, func(t *testing.T) {
 			decoded, ok := codec.DecodeToken(i.input)
@@ -253,7 +220,7 @@ func TestCodec_DecodeToken_Failure(t *testing.T) {
 func TestSortedness(t *testing.T) {
 	step := 0.01
 	prev := LessThanAny
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 	for i := -111111.0; i <= 111111.0; i++ {
 		str := fmt.Sprintf("%3f", i*step)
 		encoded, ok := c.EncodeToken(str)
@@ -269,7 +236,7 @@ func TestSortedness(t *testing.T) {
 
 func BenchmarkEncoding(b *testing.B) {
 	step := 0.001
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 	to := float64(b.N / 2)
 	from := -1 * to
 	for i := from; i <= to; i++ {
@@ -316,7 +283,7 @@ func TestEncodeMixedText(t *testing.T) {
 		{name: "mixed c3", input: "SomeCam1000D", ok: true, output: "SomeCam 741 D"},
 		{name: "mixed c4", input: "SomeCam1100D", ok: true, output: "SomeCam 7411 D"},
 	}
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 	for _, i := range testCases {
 		t.Run(i.name, func(t *testing.T) {
 			encoded, ok := c.EncodeMixedText(i.input)
@@ -345,7 +312,7 @@ func BenchmarkEncodeMixedText(b *testing.B) {
 	var textLen = len(genText)
 
 	r := rand.New(rand.NewSource(42))
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 
 	for i := 0; i < textLen; i++ {
 		genText[i] = charPool[r.Intn(len(charPool))]
@@ -364,7 +331,7 @@ func BenchmarkEncodeMixedText(b *testing.B) {
 }
 
 func ExampleCodec_EncodeToken() {
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 
 	out, ok := c.EncodeToken("86400")
 	fmt.Printf("%q, %v\n", out, ok)
@@ -382,7 +349,7 @@ func ExampleCodec_EncodeToken() {
 }
 
 func ExampleCodec_DecodeToken() {
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 
 	out, ok := c.DecodeToken("42yx~")
 	fmt.Printf("%q, %v\n", out, ok)
@@ -395,7 +362,7 @@ func ExampleCodec_DecodeToken() {
 	// "0.000125", true
 }
 func ExampleCodec_EncodeMixedText() {
-	c, _ := NewCodecWithDecimalSeparator('.')
+	c, _ := NewCodecWithDecimalSeparator(10, '.')
 
 	out, ok := c.EncodeMixedText("SomeCam 40d")
 	fmt.Printf("%q, %v\n", out, ok)
