@@ -69,7 +69,7 @@ const GreaterThanAny = "8"
 const zeroInput = "0"
 
 const negativeNumberTerminator byte = '~'
-const inTextSeparator byte = ' '
+const positiveNumberTerminator byte = ' '
 
 func isSignByte(b byte) bool {
 	return b == minusByte || b == plusByte

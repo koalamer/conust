@@ -219,8 +219,8 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 				c.builder.Write([]byte(input[donePartEnd:i]))
 				donePartEnd = i
 				insideNumber = true
-				if i > 0 && input[i-1] != inTextSeparator {
-					c.builder.WriteByte(inTextSeparator)
+				if i > 0 && input[i-1] != positiveNumberTerminator {
+					c.builder.WriteByte(positiveNumberTerminator)
 				}
 			}
 			continue
@@ -235,8 +235,8 @@ func (c *Codec) EncodeMixedText(input string) (out string, ok bool) {
 			}
 			insideNumber = false
 			donePartEnd = i
-			if input[i] != inTextSeparator {
-				c.builder.WriteByte(inTextSeparator)
+			if input[i] != positiveNumberTerminator {
+				c.builder.WriteByte(positiveNumberTerminator)
 			}
 		}
 	}
