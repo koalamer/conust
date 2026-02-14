@@ -19,75 +19,63 @@ var errIdenticalSeparators = errors.New("thousand and decimal separators must no
 // "Item 722" and "Item 731" which sort as the numeric value in them would naturally imply.
 type Codec struct {
 	builder strings.Builder
-	digitTester
-	thousandSeparator    byte
-	decimalSeparator     byte
-	useThousandSeparator bool
-	useDecimalSeparator  bool
+	segmentScanner
 }
 
-func NewCodec(radix int, thousandSeparator, decimalSeparator byte) (*Codec, error) {
-	if thousandSeparator == decimalSeparator {
+type SignParsingOption uint8
+
+const (
+	UseNoSigns SignParsingOption = iota
+	UseMinusSign
+	UsePlusSign
+	UsePlusMinusSigns
+)
+
+func NewCodec(
+	radix int,
+	thousandSeparator *byte,
+	decimalSeparator *byte,
+	signParsingOption SignParsingOption,
+) (*Codec, error) {
+	tSep := placeholderInvalidSeparator
+	dSep := placeholderInvalidSeparator
+
+	if thousandSeparator != nil {
+		tSep = *thousandSeparator
+		if !isAllowedAsSeparator(tSep) {
+			return nil, errInvalidSeparator
+		}
+	}
+
+	if decimalSeparator != nil {
+		dSep = *decimalSeparator
+		if !isAllowedAsSeparator(dSep) {
+			return nil, errInvalidSeparator
+		}
+	}
+
+	if tSep != placeholderInvalidSeparator &&
+		tSep == dSep {
 		return nil, errIdenticalSeparators
 	}
 
-	if !isAllowedAsSeparator(thousandSeparator) ||
-		!isAllowedAsSeparator(decimalSeparator) {
-		return nil, errInvalidSeparator
-	}
+	scanner, err := newSegmentScanner(
+		radix,
+		tSep,
+		dSep,
+		tSep != placeholderInvalidSeparator,
+		dSep != placeholderInvalidSeparator,
+		(signParsingOption == UsePlusSign || signParsingOption == UsePlusMinusSigns),
+		(signParsingOption == UseMinusSign || signParsingOption == UsePlusMinusSigns),
+	)
 
-	tester, err := newDigitTester(radix)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Codec{
-		builder:              strings.Builder{},
-		digitTester:          *tester,
-		thousandSeparator:    thousandSeparator,
-		useThousandSeparator: true,
-		decimalSeparator:     decimalSeparator,
-		useDecimalSeparator:  true,
-	}, nil
-}
-
-func NewCodecWithThousandSeparator(radix int, separator byte) (*Codec, error) {
-	if !isAllowedAsSeparator(separator) {
-		return nil, errInvalidSeparator
-	}
-
-	tester, err := newDigitTester(radix)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Codec{
-		builder:              strings.Builder{},
-		digitTester:          *tester,
-		thousandSeparator:    separator,
-		useThousandSeparator: true,
-		decimalSeparator:     separatorPlaceholderByte,
-		useDecimalSeparator:  false,
-	}, nil
-}
-
-func NewCodecWithDecimalSeparator(radix int, separator byte) (*Codec, error) {
-	if !isAllowedAsSeparator(separator) {
-		return nil, errInvalidSeparator
-	}
-
-	tester, err := newDigitTester(radix)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Codec{
-		builder:              strings.Builder{},
-		digitTester:          *tester,
-		thousandSeparator:    separatorPlaceholderByte,
-		useThousandSeparator: false,
-		decimalSeparator:     separator,
-		useDecimalSeparator:  true,
+		builder:        strings.Builder{},
+		segmentScanner: *scanner,
 	}, nil
 }
 
