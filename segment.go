@@ -19,18 +19,18 @@ const (
 )
 
 type segmentScanner struct {
-	input                string
+	input string
+	// config
 	digitTester          digitTester
-	nextSegmentStartPos  int
-	headPos              int
-	nextSegmentType      segmentTypeValue
-	lastByteType         byteTypeValue
 	thousandSeparator    byte
 	decimalSeparator     byte
 	useThousandSeparator bool
 	useDecimalSeparator  bool
 	usePlusSign          bool
 	useMinusSign         bool
+	// state
+	headPos int
+	// result info
 	containsSingleNumber bool
 }
 
@@ -49,75 +49,109 @@ func newSegmentScanner(
 	}
 
 	return &segmentScanner{
-		input:                "",
 		digitTester:          *digitTester,
-		nextSegmentStartPos:  0,
-		headPos:              0,
-		nextSegmentType:      segmentTypeText,
-		lastByteType:         byteTypeText,
 		thousandSeparator:    thousandSeparator,
 		decimalSeparator:     decimalSeparator,
 		useThousandSeparator: useThousandSeparator,
 		useDecimalSeparator:  useDecimalSeparator,
 		usePlusSign:          usePlusSign,
 		useMinusSign:         useMinusSign,
-		containsSingleNumber: false,
 	}, nil
 }
 
 func (s *segmentScanner) Reset(input string) {
 	s.input = input
-	s.nextSegmentStartPos = 0
 	s.headPos = 0
-	s.nextSegmentType = s.segmentTypeAtPos(0, segmentTypeText)
-	s.lastByteType = byteTypeText
-	s.containsSingleNumber = false
+	s.containsSingleNumber = true
 }
 
 func (s *segmentScanner) Next() (string, segmentTypeValue) {
-	if s.nextSegmentStartPos >= len(s.input) {
-		return "", segmentTypeText
-	}
+	startPos := s.headPos
+	digitPos := s.headPos
+	inputLength := len(s.input)
 
-	// nextSegmentType is already set
-	s.headPos = s.nextSegmentStartPos
-
-	for i := s.headPos; i < len(s.input); i++ {
-		switch s.byteType(s.input[i]) {
-		case byteTypeDigit:
-			if s.lastByteType == byteTypeDigit {
-				continue
-			}
+	// find first digit
+	for i := startPos; i < inputLength; i++ {
+		if s.digitTester.isDigit(s.input[i]) {
+			digitPos = i
+			break
 		}
 	}
+
+	// no digit was found
+	if digitPos >= inputLength {
+		s.headPos = digitPos
+		return s.input[startPos:digitPos], segmentTypeText
+	}
+
+	textEndPos := digitPos
+	minusSignFound := false
+
+	// adjust segment end index according to sign detection setting
+	if digitPos > startPos {
+		indexBeforeDigit := digitPos - 1
+		byteBeforeDigit := s.input[indexBeforeDigit]
+
+		if (byteBeforeDigit == plusByte && s.usePlusSign) ||
+			(byteBeforeDigit == minusByte && s.useMinusSign) {
+			textEndPos = indexBeforeDigit
+			minusSignFound = (byteBeforeDigit == minusByte)
+		}
+	}
+
+	// there is some text before the number (and optional sign character)
+	if textEndPos > startPos {
+		s.headPos = textEndPos
+		return s.input[startPos:textEndPos], segmentTypeText
+	}
+
+	// the segment is a number segment
+
+	// TODO parse number
 
 	return "", segmentTypeText
 }
 
-func (s *segmentScanner) byteType(b byte) byteTypeValue {
+func (s *segmentScanner) findFirstDigit() {
+}
+
+func (s *segmentScanner) xbyteType(b byte) byteTypeValue {
 	if s.digitTester.isDigit(b) {
 		return byteTypeDigit
 	}
 
-	if isMinusByte(b) && s.useMinusSign {
-		return byteTypeMinus
+	if b == minusByte {
+		if s.useMinusSign {
+			return byteTypeMinus
+		}
+		return byteTypeText
 	}
 
-	if isPlusByte(b) && s.usePlusSign {
-		return byteTypePlus
+	if b == plusByte {
+		if s.usePlusSign {
+			return byteTypePlus
+		}
+		return byteTypeText
 	}
 
-	if b == s.thousandSeparator && s.useThousandSeparator {
-		return byteTypeThousandSeparator
+	if b == s.thousandSeparator {
+		if s.useThousandSeparator {
+			return byteTypeThousandSeparator
+		}
+		return byteTypeText
 	}
 
-	if b == s.decimalSeparator && s.useDecimalSeparator {
-		return byteTypeDecimalSeparator
+	if b == s.decimalSeparator {
+		if s.useDecimalSeparator {
+			return byteTypeDecimalSeparator
+		}
+		return byteTypeText
 	}
 
 	return byteTypeText
 }
 
+/*
 func (s *segmentScanner) segmentTypeAtPos(pos int, previousSegmentType segmentTypeValue) segmentTypeValue {
 	inputLen := len(s.input)
 
@@ -172,3 +206,4 @@ func (s *segmentScanner) segmentTypeAtPos(pos int, previousSegmentType segmentTy
 
 	return segmentTypeText
 }
+*/

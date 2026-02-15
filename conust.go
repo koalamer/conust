@@ -73,27 +73,15 @@ const zeroInput = "0"
 const negativeNumberTerminator byte = '~'
 const positiveNumberTerminator byte = ' '
 
-func isMinusByte(b byte) bool {
-	return b == minusByte
-}
-
-func isPlusByte(b byte) bool {
-	return b == plusByte
-}
-
-func isSignByte(b byte) bool {
-	return isMinusByte(b) || isPlusByte(b)
-}
-
-func isDigit(b byte) bool {
+func isDigit36(b byte) bool {
 	return (b >= digit0 && b <= digit9) ||
 		(b >= digitA && b <= digitZ) ||
 		(b >= digitUppercaseA && b <= digitUppercaseZ)
 }
 
 func isAllowedAsSeparator(b byte) bool {
-	return !isDigit(b) &&
-		!isSignByte(b) &&
+	return !isDigit36(b) &&
+		!(b == minusByte || b == plusByte) &&
 		b >= minPrintableAsciiByte &&
 		b <= maxPrintableAsciiByte
 }

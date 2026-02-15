@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestIsDigit(t *testing.T) {
+func TestisDigit36(t *testing.T) {
 	var allBytes [256]byte
 
 	for i := range allBytes {
@@ -32,7 +32,7 @@ func TestIsDigit(t *testing.T) {
 				isLcDigit := slices.Contains(lowercaseDigits, b)
 				isUcDigit := slices.Contains(uppercaseDigits, b)
 
-				if (isLcDigit || isUcDigit) != tester.isDigit(b) {
+				if (isLcDigit || isUcDigit) != tester.isDigit36(b) {
 					t.Fatalf("wrong digit check for byte %v", b)
 				}
 			}

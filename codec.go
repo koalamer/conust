@@ -157,7 +157,7 @@ func (c *Codec) DecodeToken(input string) (out string, ok bool) {
 	significantPartLength := encodedLength - sStartPos
 
 	for i := sStartPos; i < encodedLength; i++ {
-		if !isDigit(input[i]) {
+		if !isDigit36(input[i]) {
 			return "", false
 		}
 	}
@@ -251,7 +251,7 @@ func (c *Codec) getPositivity(input string) (positive bool) {
 func (c *Codec) getSignificantStartPos(input string) int {
 	i := 0
 	for ; i < len(input); i++ {
-		if isDigit(input[i]) && input[i] != digit0 {
+		if isDigit36(input[i]) && input[i] != digit0 {
 			return i
 		}
 	}
@@ -261,7 +261,7 @@ func (c *Codec) getSignificantStartPos(input string) int {
 func (c *Codec) getSignificantEndPos(input string) int {
 	i := len(input) - 1
 	for ; i >= 0; i-- {
-		if isDigit(input[i]) && input[i] != digit0 {
+		if isDigit36(input[i]) && input[i] != digit0 {
 			return i + 1
 		}
 	}
