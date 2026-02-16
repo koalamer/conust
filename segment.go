@@ -25,8 +25,6 @@ type segmentScanner struct {
 	useMinusSign         bool
 	// state
 	headPos int
-	// result info
-	containsSingleNumber bool
 }
 
 func newSegmentScanner(
@@ -57,7 +55,6 @@ func newSegmentScanner(
 func (s *segmentScanner) Reset(input string) {
 	s.input = input
 	s.headPos = 0
-	s.containsSingleNumber = true
 }
 
 func (s *segmentScanner) Next() (segment string, isNumber bool) {
@@ -139,7 +136,4 @@ func (s *segmentScanner) Next() (segment string, isNumber bool) {
 	}
 
 	return s.input[numberSegmentStartPos:], true
-}
-
-func (s *segmentScanner) findFirstDigit() {
 }
